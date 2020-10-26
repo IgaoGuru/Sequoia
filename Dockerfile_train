@@ -1,0 +1,23 @@
+FROM nvidia/cuda:10.2-cudnn8-runtime-ubuntu18.04
+
+RUN apt-get update && apt-get install -y python3 
+
+RUN apt-get install -y python3-pip 
+
+RUN useradd -m sequoia
+
+# RUN chown -R sequoia:sequoia /home/sequoia
+
+COPY requirements.txt /home/sequoia/sequoia-nn/requirements.txt
+WORKDIR /home/sequoia/sequoia-nn/
+
+USER sequoia
+
+RUN cd /home/sequoia/sequoia-nn
+
+RUN pip3 install -r requirements.txt
+RUN pip3 install torch torchvision 
+
+COPY . /home/sequoia/sequoia-nn
+
+
