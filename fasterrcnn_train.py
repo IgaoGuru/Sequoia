@@ -78,7 +78,7 @@ transform = transforms.Compose([
 ])
 
 #dataset = CsgoPersonFastRCNNDataset(dataset_path, transform)
-dataset = datasetcsgo.CsgoDataset(dataset_path, classes=classes, transform=transform, scale_factor=scale_factor)
+dataset = datasetcsgo.CsgoDataset(dataset_path, classes=classes, transform=transform, scale_factor=scale_factor, dlength=None)
 
 # a simple custom collate function, just to show the idea def my_collate(batch):
 def my_collate(batch):

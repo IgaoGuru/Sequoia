@@ -69,7 +69,7 @@ class  CsgoDataset(Dataset):
         "ct"
     ]
 
-    def __init__(self, root_path, classes=None, transform=None, scale_factor=None):
+    def __init__(self, root_path, classes=None, transform=None, scale_factor=None, dlength=None):
         """generates dictionary
 
         Args:
@@ -90,11 +90,14 @@ class  CsgoDataset(Dataset):
         for _, dirs, _ in os.walk(root_path):
             for current_dir in dirs:
                 update_dataset(self.root_path, current_dir, self.dict_dataset)
+                self.length = len(self.dict_dataset)
+                if dlength:
+                    if self.length >= dlength:
+                        break
             break
         if len(self.dict_dataset) == 0:
             raise Exception('No dataset folder was found!')
         self.frame_keys = list(self.dict_dataset.keys())
-        self.length = len(self.frame_keys)
         # print(self.dict_dataset)
         print(f'dataset\'s length is: {self.length} images')
 
