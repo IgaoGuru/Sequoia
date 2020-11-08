@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "."
+		},
+		{
+			"path": "..\\yolov5"
 		}
 	],
 	"settings": {}
