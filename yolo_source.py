@@ -8,6 +8,8 @@ import cv2
 import torch
 import torch.backends.cudnn as cudnn
 from numpy import random
+from numpy import swapaxes
+from numpy import reshape
 
 from models.experimental import attempt_load
 # from utils.datasets import LoadStreams, LoadImages
@@ -33,69 +35,56 @@ def detect(img, weights, save_path, img_name, view_img=False, save_img=False):
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
 
     # Run inference
-    print(img.shape)
+    print("2::", img.shape)
+    im0 = img #save raw image for later
+    img = swapaxes(img, 0, 2)
+    img = swapaxes(img, 1, 2)
+    img = img.reshape(1, 3, 512, 512)
+    # img = torch.zeros((1, 3, 512, 512), device=device)  # init img
     img = torch.from_numpy(img).to(device)
+    print("3::", img.shape)
     img = img.float()  # uint8 to fp16/32
     img /= 255.0  # 0 - 255 to 0.0 - 1.0
     if img.ndimension() == 2:
         img = img.unsqueeze(0)
-        print(img.shape)
-        print('oie')
+        print("4::", img.shape)
 
     # Inference
     # pred = model(img, augment=opt.augment)[0]
     pred = model(img)[0]
 
     # Apply NMS
-    pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
+    pred = non_max_suppression(pred) 
 
     # Process detections
-    save_path = os.path.join(save_path, img_name) + ".png"
-    s += '%gx%g ' % img.shape[2:]  # print string
-    gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-    if det is not None and len(det):
-        # Rescale boxes from img_size to im0 size
-        det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+    for i, det in enumerate(pred):  # detections per image
+        p, s = "teste", ''
 
-        # Print results
-        for c in det[:, -1].unique():
-            n = (det[:, -1] == c).sum()  # detections per class
-            s += '%g %ss, ' % (n, names[int(c)])  # add to string
+        s += '%gx%g ' % img.shape[2:]  # print string
+        gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+        if det is not None and len(det):
+            # Rescale boxes from img_size to im0 size
+            det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
 
-        if save_img or view_img:  # Add bbox to image
-            label = '%s %.2f' % (names[int(cls)], conf)
-            plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
+            # Print results
+            for c in det[:, -1].unique():
+                n = (det[:, -1] == c).sum()  # detections per class
+                s += '%g %ss, ' % (n, names[int(c)])  # add to string
 
-    # Print time (inference + NMS)
-    print("%sDone.")
+            # Write results
+            for *xyxy, conf, cls in reversed(det):
+                if save_img or view_img:  # Add bbox to image
+                    label = '%s %.2f' % (names[int(cls)], conf)
+                    plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
 
-    # Stream results
-    if view_img:
-        cv2.imshow(p, im0)
-        if cv2.waitKey(1) == ord('q'):  # q to quit
-            raise StopIteration
+        # Print time (inference + NMS)
+        print('%sDone.' % (s))
 
-    # Save results (image with detections)
-    if save_img:
-        if dataset.mode == 'images':
-            cv2.imwrite(save_path, im0)
-        else:
-            if vid_path != save_path:  # new video
-                vid_path = save_path
-                if isinstance(vid_writer, cv2.VideoWriter):
-                    vid_writer.release()  # release previous video writer
-
-                fourcc = 'mp4v'  # output video codec
-                fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
-            vid_writer.write(im0)
-
-    if save_txt or save_img:
-        print('Results saved to %s' % Path(out))
-
-    print('Done. (%.3fs)' % (time.time() - t0))
+        # Stream results
+        if view_img:
+            cv2.imshow(p, im0)
+            if cv2.waitKey(1) == ord('q'):  # q to quit
+                raise StopIteration
 
 
 if __name__ == '__main__':
