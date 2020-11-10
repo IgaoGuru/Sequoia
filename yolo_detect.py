@@ -23,6 +23,7 @@ while True:
         img = img.resize((512, 512))
         img = np.asarray(img)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            
-    detect(img, weights, save_path, img_name, view_img=True) 
-    # sleep(0.1)
+
+        detect(img, weights, save_path, img_name, view_img=True, save_img=False) 
+
+    sleep(0.01)

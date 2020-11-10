@@ -7,6 +7,8 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+
+from os import path
 from numpy import random
 from numpy import swapaxes
 from numpy import reshape
@@ -18,36 +20,33 @@ from utils.general import (
     xyxy2xywh, plot_one_box, strip_optimizer, set_logging)
 # from utils.torch_utils import select_device, load_classifier, time_synchronized
 
+# Initialize
+device = torch.device("cuda:0")
+print("detecting on: %s"%(torch.cuda.get_device_name(device)))
+
+# Load model
+weights = "e:\\ai\\cloud_outputs\\exp6\\weights\\best.pt"
+model = attempt_load(weights, map_location=device)  # load FP32 model
+
+# Get names and colors
+names = model.module.names if hasattr(model, 'module') else model.names
+colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
+
+
 def detect(img, weights, save_path, img_name, view_img=False, save_img=False):
     # out, source, weights, view_img, save_txt, imgsz = \
     #     opt.save_dir, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     # webcam = source.isnumeric() or source.startswith(('rtsp://', 'rtmp://', 'http://')) or source.endswith('.txt')
 
-    # Initialize
-    device = torch.device("cuda:0")
-    print("detecting on: %s"%(torch.cuda.get_device_name(device)))
-
-    # Load model
-    model = attempt_load(weights, map_location=device)  # load FP32 model
-
-    # Get names and colors
-    names = model.module.names if hasattr(model, 'module') else model.names
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
-
     # Run inference
-    print("2::", img.shape)
+    # print("2::", img.shape)
     im0 = img #save raw image for later
     img = swapaxes(img, 0, 2)
     img = swapaxes(img, 1, 2)
     img = img.reshape(1, 3, 512, 512)
-    # img = torch.zeros((1, 3, 512, 512), device=device)  # init img
     img = torch.from_numpy(img).to(device)
-    print("3::", img.shape)
     img = img.float()  # uint8 to fp16/32
     img /= 255.0  # 0 - 255 to 0.0 - 1.0
-    if img.ndimension() == 2:
-        img = img.unsqueeze(0)
-        print("4::", img.shape)
 
     # Inference
     # pred = model(img, augment=opt.augment)[0]
@@ -82,9 +81,13 @@ def detect(img, weights, save_path, img_name, view_img=False, save_img=False):
 
         # Stream results
         if view_img:
+            # im0 = cv2.resize(im0, dsize=(1024, 1024), interpolation=cv2.INTER_CUBIC)
             cv2.imshow(p, im0)
             if cv2.waitKey(1) == ord('q'):  # q to quit
                 raise StopIteration
+        if save_img:
+            cv2.imwrite(path.join(save_path, img_name) + ".png", im0)
+            
 
 
 if __name__ == '__main__':
