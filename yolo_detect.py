@@ -57,7 +57,6 @@ def shoot(bbox):
         ahk.mouse_move(x=x_m, y=y_m, blocking=True,\
             speed=0, relative=False)
 
-
 while True:
     img_name = str(int(time()*1000))
     with mss() as sct:
@@ -78,5 +77,3 @@ while True:
             print(bboxes)
 
         # sleep(0.01)
-
-# shoot_2([1,2,3,4])
