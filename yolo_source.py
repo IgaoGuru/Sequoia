@@ -12,6 +12,7 @@ from os import path
 from numpy import random
 from numpy import swapaxes
 from numpy import reshape
+from numpy import asarray
 
 from models.experimental import attempt_load
 # from utils.datasets import LoadStreams, LoadImages
@@ -33,7 +34,7 @@ names = model.module.names if hasattr(model, 'module') else model.names
 colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
 
 
-def detect(img, weights, save_path, img_name, view_img=False, save_img=False):
+def detect(img, weights, save_path, img_name, conf_threshold=0.4, view_img=False, save_img=False):
     # out, source, weights, view_img, save_txt, imgsz = \
     #     opt.save_dir, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     # webcam = source.isnumeric() or source.startswith(('rtsp://', 'rtmp://', 'http://')) or source.endswith('.txt')
@@ -56,6 +57,7 @@ def detect(img, weights, save_path, img_name, view_img=False, save_img=False):
     pred = non_max_suppression(pred) 
 
     # Process detections
+    bboxes = []
     for i, det in enumerate(pred):  # detections per image
         p, s = "teste", ''
 
@@ -72,12 +74,18 @@ def detect(img, weights, save_path, img_name, view_img=False, save_img=False):
 
             # Write results
             for *xyxy, conf, cls in reversed(det):
-                if save_img or view_img:  # Add bbox to image
+                if (save_img or view_img) and conf >= conf_threshold:  # Add bbox to image
                     label = '%s %.2f' % (names[int(cls)], conf)
                     plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
+                    bbox = []
+                    #only return enemy bboxes:
+                    if label[:2] == "ct":
+                        for coord in xyxy:
+                            bbox.append(coord.item())
+                        bboxes.append(bbox)
 
         # Print time (inference + NMS)
-        print('%sDone.' % (s))
+        # print('%sDone.' % (s))
 
         # Stream results
         if view_img:
@@ -87,8 +95,10 @@ def detect(img, weights, save_path, img_name, view_img=False, save_img=False):
                 raise StopIteration
         if save_img:
             cv2.imwrite(path.join(save_path, img_name) + ".png", im0)
-            
 
+        if save_img or view_img:
+            return bboxes
+            
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
