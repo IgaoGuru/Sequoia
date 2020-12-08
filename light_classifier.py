@@ -60,17 +60,6 @@ class Light_Dataset(CsgoDataset):
 
       return img, label
 
-      # img = self.dset.get_image(idx)
-      # if self.transform:
-      #    img = self.transform(img)
-      # #clazz = self.dict_frames[self.frame_keys[idx]][0]
-
-      # bboxes = torch.tensor(self.dset.dict_dataset[self.dset.frame_keys[idx]][1], dtype=torch.float)
-      # if self.scale_factor != None:
-      #    bboxes = bboxes * self.scale_factor
-      # labels = torch.tensor([self.dset.classes.index(c) for c in self.dset.dict_dataset[self.dset.frame_keys[idx]][0]], dtype=torch.int64)
-      # return img, bboxes, labels
-
 #some utils      
 def binary_acc(y_pred, y_test):
    y_pred_tag = torch.log_softmax(y_pred, dim = 1)

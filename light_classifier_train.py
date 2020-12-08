@@ -34,8 +34,8 @@ num_epochs = 200
 scale_factor = 1
 # checkpoints = [14, 19, 49, 79, 99, 119, 149, 179, 199] #all epoch indexes where the network should be saved
 checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999]
-model_number = 999 #currently using '999' as "disposable" model_number :)
-batch_size = 1
+model_number = 1 #currently using '999' as "disposable" model_number :)
+batch_size = 16
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
@@ -75,7 +75,7 @@ transform = transforms.Compose([
 ])
 
 #load dataset
-dataset = Light_Dataset(dataset_path, transform=transform, img_size=n_img_size, dlength=1200)
+dataset = Light_Dataset(dataset_path, transform=transform, img_size=n_img_size)
 
 # a simple custom collate function, just to show the idea def my_collate(batch):
 def my_collate_2(batch):
@@ -131,7 +131,7 @@ def train_cycle():
 
         ################## TRAINING STARTS ######################## 
         model.train()
-        print(f'training epoch #{epoch}:')
+        print(f'training epoch #{epoch+1}:')
         for i, data in enumerate(tqdm(train_loader, leave=False)):
             imgs, labels = data
             # img = imgs[0].numpy().copy().transpose(1, 2, 0)
@@ -183,7 +183,7 @@ def train_cycle():
 
         ################## VALIDATION STARTS ######################## 
         model.eval()
-        print(f'validating epoch #{epoch}:')
+        print(f'validating epoch #{epoch+1}:')
         for i, data in enumerate(tqdm(val_loader, leave=False)):
             imgs, labels = data
 

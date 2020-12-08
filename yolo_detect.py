@@ -1,19 +1,16 @@
 import cv2
-from time import sleep
-from time import time
 import numpy as np
 from mss import mss
 from cv2 import cv2
-from PIL import Image
-from yolo_source import detect
-
-# from pynput import mouse
-
 from ahk import AHK
-ahk = AHK()
+from PIL import Image
+from time import sleep
+from time import time
 
-# import mouse
-# import pyautogui
+from yolo_source import detect
+from light_inference import light_run
+
+ahk = AHK()
 
 weights = "e:\\ai\\cloud_outputs\\exp14\\weights\\best.pt"
 save_path = "e:\\ai\\Sequoia\\runs_igor\\"
@@ -74,6 +71,7 @@ while True:
 
         if len(bboxes) > 0:
             shoot(bboxes[0])
-            print(bboxes)
+            light_run(img, bboxes[0])
+            # print(bboxes)
 
         # sleep(0.01)
