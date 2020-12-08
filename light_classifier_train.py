@@ -34,11 +34,12 @@ num_epochs = 200
 scale_factor = 1
 # checkpoints = [14, 19, 49, 79, 99, 119, 149, 179, 199] #all epoch indexes where the network should be saved
 checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999]
-model_number = 1 #currently using '999' as "disposable" model_number :)
+model_number = 5 #currently using '999' as "disposable" model_number :)
 batch_size = 16
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
+dlength = 1000 # leave None for maximum dataset length
 
 # dataset_path = "C:\\Users\\User\\Documents\\GitHub\\Csgo-NeuralNetworkPaulo\\data\\datasets\\"  #remember to put "/" at the end
 dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
@@ -75,7 +76,7 @@ transform = transforms.Compose([
 ])
 
 #load dataset
-dataset = Light_Dataset(dataset_path, transform=transform, img_size=n_img_size)
+dataset = Light_Dataset(dataset_path, transform=transform, img_size=n_img_size, dlength=dlength)
 
 # a simple custom collate function, just to show the idea def my_collate(batch):
 def my_collate_2(batch):
@@ -154,19 +155,17 @@ def train_cycle():
             preds = model(imgs)
 
             loss = criterion(preds, labels_cat)
-            loss_value = loss.item()
-
             acc = binary_acc(preds, labels_cat)
 
-            running_loss += loss_value 
-            running_acc += acc
+            running_loss += loss.item() 
+            running_acc += acc.item()
 
             if (i + 1) % log_interval == 0:
                 print('%s ::Training:: [%d, %5d] loss: %.5f' %
                     (model_number, epoch + 1, i + 1, running_loss / log_interval))
 
-                loss_total_dict['losses'].append(running_loss) 
-                loss_total_dict['accuracies'].append(running_acc) 
+                loss_total_dict['losses'].append(running_loss/log_interval) 
+                loss_total_dict['accuracies'].append(running_acc/log_interval) 
                 running_loss = 0.0
                 running_acc = 0.0
 
@@ -179,7 +178,6 @@ def train_cycle():
 
             loss.backward()
             optimizer.step()
-        print ("\033[A                             \033[A")
 
         ################## VALIDATION STARTS ######################## 
         model.eval()
@@ -203,8 +201,8 @@ def train_cycle():
             loss = criterion(preds, labels_cat)
             acc = binary_acc(preds, labels_cat)
 
-            running_loss_val += loss_value 
-            running_acc_val += acc
+            running_loss_val += loss.item() 
+            running_acc_val += acc.item()
 
             # #forward prop
             # bboxes_pred, pred_cls, pred_scores = fastercnn.get_prediction_fastercnn(
@@ -216,14 +214,14 @@ def train_cycle():
                     (model_number, epoch + 1, i + 1, running_loss_val / log_interval_val))
                 print(f'Taking (precisely) {(time()-tic)/60} minutes per epoch')
 
-                loss_total_dict['losses_val'].append(running_loss_val) 
-                loss_total_dict['accuracies_val'].append(running_acc_val) 
+                loss_total_dict['losses_val'].append(running_loss_val/log_interval_val) 
+                loss_total_dict['accuracies_val'].append(running_acc_val/log_interval_val) 
                 running_loss_val = 0.0
                 running_acc_val = 0.0
 
                 if epoch in checkpoints: 
                     with open(f'{model_save_path_new}-train', 'wb') as filezin:
                         pickle.dump(loss_total_dict, filezin)
-        print ("\033[A                             \033[A")
+        print("\n")
 
 train_cycle()

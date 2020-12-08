@@ -78,7 +78,7 @@ def binary_acc(y_pred, y_test):
 #    img = sample[0]
 #    img = np.array(img)
 #    print(img)
-#    img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-#    cv2.imshow("igor", img)
-#    cv2.waitKey(0)
-#    cv2.destroyAllWindows()
+# img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+# cv2.imshow("igor", img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()

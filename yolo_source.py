@@ -79,10 +79,13 @@ def detect(img, weights, save_path, img_name, conf_threshold=0.4, view_img=False
                     plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=2)
                     bbox = []
                     #only return enemy bboxes:
-                    if label[:2] == "ct":
-                        for coord in xyxy:
-                            bbox.append(coord.item())
-                        bboxes.append(bbox)
+                        # if label[:2] == "ct":
+                        #     for coord in xyxy:
+                        #         bbox.append(coord.item())
+                        #     bboxes.append(bbox)
+                    for coord in xyxy:
+                        bbox.append(coord.item())
+                    bboxes.append(bbox)
 
         # Print time (inference + NMS)
         # print('%sDone.' % (s))

@@ -5,6 +5,7 @@ from time import time
 from numpy import array as nparray
 from numpy import asarray as npasarray
 from numpy import transpose as nptranspose
+from numpy import newaxis as npnewaxis
 
 from light_classifier import Light_Classifier
 from light_classifier import binary_acc
@@ -24,7 +25,7 @@ print(f"opencv version: {cv2.__version__}")
 print("")
 
 #path to model to be loaded
-model_path = 'E:\\Documento\\output_nn\\'
+model_path = "E:\\Documento\\output_nn\\model#1e19.th"
 IMG_SIZE = 28
 
 if torch.cuda.is_available():
@@ -37,11 +38,16 @@ else:
 # model = Light_Classifier(num_convs_backbone=convs_backbone, num_backbone_out_channels=out_channels_backbone)
 model = Light_Classifier()
 model.load_state_dict(torch.load(model_path))
+model.to(device)
 model.eval()
 
 def light_run(img, bbox):
     img = img.crop(tuple(bbox))
     img = img.resize((IMG_SIZE, IMG_SIZE))
+    img = nparray(img) 
+    img = nptranspose(img, (2, 0, 1))
+    img = img[npnewaxis, ...]
+    img = torch.from_numpy(img).float().to(device)
 
     preds = model(img) 
     print("LIGHT PREDS: ", preds)

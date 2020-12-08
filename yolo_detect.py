@@ -64,10 +64,10 @@ while True:
         #create PIL image
         img = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
         img = img.resize((512, 512))
-        img = np.asarray(img)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        imgarr = np.asarray(img)
+        imgarr = cv2.cvtColor(imgarr, cv2.COLOR_BGR2RGB)
 
-        bboxes = detect(img, weights, save_path, img_name, view_img=True, save_img=False) 
+        bboxes = detect(imgarr, weights, save_path, img_name, view_img=True, save_img=False) 
 
         if len(bboxes) > 0:
             shoot(bboxes[0])
