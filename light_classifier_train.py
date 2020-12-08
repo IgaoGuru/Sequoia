@@ -1,9 +1,21 @@
+import pickle
+import cv2
+from tqdm import tqdm
+from time import time
+from numpy import array as nparray
+from numpy import asarray as npasarray
+from numpy import transpose as nptranspose
+
 from light_classifier import Light_Classifier
 from light_classifier import binary_acc
+from light_classifier import Light_Dataset
 
 import torch
 import torchvision
+import torch.optim as optim
 from torchvision import transforms
+from torch.nn import CrossEntropyLoss
+from torch.utils.data.dataloader import DataLoader
 
 print(f"torch version: {torch.__version__}")
 print(f"Torch CUDA version: {torch.version.cuda}")
@@ -17,18 +29,19 @@ IMG_SIZE_X = 1280
 IMG_SIZE_Y = 720
 
 torch.manual_seed(SEED)
-scale_factor = 0.5
+n_img_size = 28
 num_epochs = 200
+scale_factor = 1
 # checkpoints = [14, 19, 49, 79, 99, 119, 149, 179, 199] #all epoch indexes where the network should be saved
-checkpoints = [14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999]
-model_number = 1 #currently using '999' as "disposable" model_number :)
+checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999]
+model_number = 999 #currently using '999' as "disposable" model_number :)
 batch_size = 1
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
 
 # dataset_path = "C:\\Users\\User\\Documents\\GitHub\\Csgo-NeuralNetworkPaulo\\data\\datasets\\"  #remember to put "/" at the end
-dataset_path = "E:\\Documento\\outputs\\"  #remember to put "/" at the end
+dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
 # dataset_path = "/home/sequoia/data/"
 model_save_path = 'E:\\Documento\\output_nn\\'
 
@@ -61,21 +74,14 @@ transform = transforms.Compose([
     transforms.ToTensor(), # will put the image range between 0 and 1
 ])
 
-#dataset = CsgoPersonFastRCNNDataset(dataset_path, transform)
-dataset = datasetcsgo.CsgoDataset(dataset_path, classes=classes, transform=transform, scale_factor=scale_factor, dlength=None)
+#load dataset
+dataset = Light_Dataset(dataset_path, transform=transform, img_size=n_img_size, dlength=1200)
 
 # a simple custom collate function, just to show the idea def my_collate(batch):
-def my_collate(batch):
-    imgs = [item[0] for item in batch]
-    targets = [(item[1][0], item[1][1]) for item in batch]
-    img_paths = [item[2] for item in batch]
-    return [imgs, targets, img_paths]
-
 def my_collate_2(batch):
     imgs = [item[0] for item in batch]
-    bboxes = [item[1] for item in batch]
-    labels = [item[2] for item in batch]
-    return [imgs, bboxes, labels]
+    labels = [item[1] for item in batch]
+    return [imgs, labels]
 
 
 train_set, val_set, _ = dataset.split(train=0.7, val=0.15, seed=SEED)
@@ -84,6 +90,7 @@ train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, collat
 val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, collate_fn=my_collate_2)
 
 
+criterion = CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), weight_decay=weight_decay)
 log_interval = len(train_loader) // 1
 log_interval_val = len(val_loader) // 1
@@ -106,19 +113,10 @@ def train_cycle():
         'lr' : lr,
         'weight_decay' : weight_decay,
         'seed' : SEED,
-        'loss_sum' : [],
-        'loss_classifier' : [],
-        'loss_box_reg' : [],
-        'loss_objectness' : [],
-        'loss_rpn_box_reg' : []
-    }
-
-    loss_total_dict_val = { 
-        'loss_sum' : [],
-        'loss_classifier' : [],
-        'loss_box_reg' : [],
-        'loss_objectness' : [],
-        'loss_rpn_box_reg' : []
+        'losses' : [],
+        'accuracies' : [],
+        'losses_val' : [],
+        'accuracies_val' : []
     }
 
     model_save_path_new = f"{model_save_path}model#{model_number}"  
@@ -126,62 +124,52 @@ def train_cycle():
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         tic = time()
 
-    #BUG: NO IDEA WHY: BONDING WITH UTILS.PY loss_per_epoch = {
-        loss_per_epoch = {
-            'loss_sum' : [],
-            'loss_classifier' : [],
-            'loss_box_reg' : [],
-            'loss_objectness' : [],
-            'loss_rpn_box_reg' : [] }
         running_loss = 0.0
-
-        loss_per_epoch_val = {
-            'loss_sum' : [],
-            'loss_classifier' : [],
-            'loss_box_reg' : [],
-            'loss_objectness' : [],
-            'loss_rpn_box_reg' : [] }
         running_loss_val = 0.0
+        running_acc = 0.0
+        running_acc_val = 0.0
 
         ################## TRAINING STARTS ######################## 
         model.train()
-        for i, data in enumerate(train_loader):
-            imgs, bboxes, labels = data
+        print(f'training epoch #{epoch}:')
+        for i, data in enumerate(tqdm(train_loader, leave=False)):
+            imgs, labels = data
             # img = imgs[0].numpy().copy().transpose(1, 2, 0)
             # cv2.imshow('img', cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
             # if cv2.waitKey(1) & 0xFF == ord('q'):
             #     break
-            images = list(im.to(device) for im in imgs)
 
-            targets = [{'boxes': b.to(device), 'labels': l.to(device)} for b, l in zip(bboxes, labels)]
+            imgs = npasarray(list(nparray(im) for im in imgs))
+            imgs = nptranspose(imgs, (0, 3, 1, 2))
+            imgs = torch.from_numpy(imgs).float().to(device)
+            
+            #transform list of 0 dim tensors into one 1 dim tensor
+            labels_cat = torch.tensor([])
+            for label in labels:
+                labels_cat = torch.cat((label.view(1), labels_cat))
+            labels_cat = labels_cat.long().to(device)
+
             optimizer.zero_grad()
 
-            loss_dict = model(images, targets)
-            #apply weighting to losses
-            if reg_weight != 1:
-                loss_dict['loss_box_reg'] = loss_dict['loss_box_reg'] * reg_weight
-            loss = sum(l for l in loss_dict.values())
+            preds = model(imgs)
+
+            loss = criterion(preds, labels_cat)
             loss_value = loss.item()
 
+            acc = binary_acc(preds, labels_cat)
+
             running_loss += loss_value 
-            loss_per_epoch['loss_sum'].append(loss_value)
-            loss_per_epoch['loss_classifier'].append(loss_dict['loss_classifier'].item())
-            loss_per_epoch['loss_box_reg'].append(loss_dict['loss_box_reg'].item())
-            loss_per_epoch['loss_objectness'].append(loss_dict['loss_objectness'].item())
-            loss_per_epoch['loss_rpn_box_reg'].append(loss_dict['loss_rpn_box_reg'].item())
+            running_acc += acc
 
             if (i + 1) % log_interval == 0:
                 print('%s ::Training:: [%d, %5d] loss: %.5f' %
                     (model_number, epoch + 1, i + 1, running_loss / log_interval))
-                print([(k, v.item()) for k, v in loss_dict.items()])
 
-                loss_total_dict['loss_sum'].append(sum(j for j in loss_per_epoch['loss_sum']) / i) 
-                loss_total_dict['loss_classifier'].append(sum(j for j in loss_per_epoch['loss_classifier']) / i) 
-                loss_total_dict['loss_box_reg'].append(sum(j for j in loss_per_epoch['loss_box_reg']) / i) 
-                loss_total_dict['loss_objectness'].append(sum(j for j in loss_per_epoch['loss_objectness']) / i) 
-                loss_total_dict['loss_rpn_box_reg'].append(sum(j for j in loss_per_epoch['loss_rpn_box_reg']) / i) 
-
+                loss_total_dict['losses'].append(running_loss) 
+                loss_total_dict['accuracies'].append(running_acc) 
                 running_loss = 0.0
+                running_acc = 0.0
+
                 if epoch in checkpoints: 
                     print(f"Saving net at: {model_save_path_new}")
                     torch.save(model.state_dict(), model_save_path_new + 'e' + f'{epoch}' + '.th')
@@ -190,33 +178,33 @@ def train_cycle():
                     pickle.dump(loss_total_dict, filezin)
 
             loss.backward()
-
             optimizer.step()
+        print ("\033[A                             \033[A")
 
         ################## VALIDATION STARTS ######################## 
-        for i, data in enumerate(val_loader):
-            imgs, bboxes, labels = data
-            #TODO: ASK PAULO
-            img = imgs[0].numpy().copy().transpose(1, 2, 0)
-            images = list(im.to(device) for im in imgs)
-            targets = [{'boxes': b.to(device), 'labels': l.to(device)} for b, l in zip(bboxes, labels)]
+        model.eval()
+        print(f'validating epoch #{epoch}:')
+        for i, data in enumerate(tqdm(val_loader, leave=False)):
+            imgs, labels = data
+
+            imgs = npasarray(list(nparray(im) for im in imgs))
+            imgs = nptranspose(imgs, (0, 3, 1, 2))
+            imgs = torch.from_numpy(imgs).float().to(device)
+            
+            #transform list of 0 dim tensors into one 1 dim tensor
+            labels_cat = torch.tensor([])
+            for label in labels:
+                labels_cat = torch.cat((label.view(1), labels_cat))
+            labels_cat = labels_cat.long().to(device)
 
             #running model
-            loss_dict = model(images, targets)
-            #apply weighting to losses
-            if reg_weight != 1:
-                loss_dict['loss_box_reg'] = loss_dict['loss_box_reg'] * reg_weight
-            loss = sum(l for l in loss_dict.values())
-            loss_value = loss.item()
+            preds = model(imgs)
 
-            running_loss += loss_value 
-            loss_per_epoch_val['loss_sum'].append(loss_value)
-            loss_per_epoch_val['loss_classifier'].append(loss_dict['loss_classifier'].item())
-            loss_per_epoch_val['loss_box_reg'].append(loss_dict['loss_box_reg'].item())
-            loss_per_epoch_val['loss_objectness'].append(loss_dict['loss_objectness'].item())
-            loss_per_epoch_val['loss_rpn_box_reg'].append(loss_dict['loss_rpn_box_reg'].item())
+            loss = criterion(preds, labels_cat)
+            acc = binary_acc(preds, labels_cat)
 
-            # model.eval()
+            running_loss_val += loss_value 
+            running_acc_val += acc
 
             # #forward prop
             # bboxes_pred, pred_cls, pred_scores = fastercnn.get_prediction_fastercnn(
@@ -225,23 +213,17 @@ def train_cycle():
 
             if (i + 1) % log_interval_val == 0:
                 print('%s ::Validation:: [%d, %5d] loss: %.5f' %
-                    (model_number, epoch + 1, i + 1, running_loss / log_interval_val))
+                    (model_number, epoch + 1, i + 1, running_loss_val / log_interval_val))
                 print(f'Taking (precisely) {(time()-tic)/60} minutes per epoch')
-                print([(k, v.item()) for k, v in loss_dict.items()])
 
-                loss_total_dict_val['loss_sum'].append(sum(j for j in loss_per_epoch_val['loss_sum']) / i) 
-                loss_total_dict_val['loss_classifier'].append(sum(j for j in loss_per_epoch_val['loss_classifier']) / i) 
-                loss_total_dict_val['loss_box_reg'].append(sum(j for j in loss_per_epoch_val['loss_box_reg']) / i) 
-                loss_total_dict_val['loss_objectness'].append(sum(j for j in loss_per_epoch_val['loss_objectness']) / i) 
-                loss_total_dict_val['loss_rpn_box_reg'].append(sum(j for j in loss_per_epoch_val['loss_rpn_box_reg']) / i) 
-
-                running_loss = 0.0
+                loss_total_dict['losses_val'].append(running_loss_val) 
+                loss_total_dict['accuracies_val'].append(running_acc_val) 
+                running_loss_val = 0.0
+                running_acc_val = 0.0
 
                 if epoch in checkpoints: 
-                    loss_total_dict['loss_sum_val'] = loss_total_dict_val['loss_sum']
-                    loss_total_dict['loss_classifier_val'] = loss_total_dict_val['loss_sum']
-                    loss_total_dict['loss_box_reg_val'] = loss_total_dict_val['loss_sum']
-                    loss_total_dict['loss_objectiveness_val'] = loss_total_dict_val['loss_sum']
-                    loss_total_dict['loss_rpn_box_reg_val'] = loss_total_dict_val['loss_sum']
                     with open(f'{model_save_path_new}-train', 'wb') as filezin:
                         pickle.dump(loss_total_dict, filezin)
+        print ("\033[A                             \033[A")
+
+train_cycle()

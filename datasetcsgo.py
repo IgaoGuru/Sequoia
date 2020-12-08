@@ -1,3 +1,4 @@
+from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import os
@@ -40,8 +41,10 @@ def update_dataset(dataset_root_path, session_name, dict_dataset):
     #each group contains all bboxes and labels pertaining to the key's image
     gp_key = df[['key','label','x0','y0','x1','y1']].groupby(['key'])
 
-    for key, df_key in gp_key:
+    print(f"loading session: {session_name}")
+    for key, df_key in tqdm(gp_key, leave=False):
         dict_dataset[key] = (df_key['label'].values, (df_key[['x0','y0','x1','y1']].values).astype(np.short))
+    print ("\033[A                             \033[A")
 
 # class CsgoDataset(Dataset):
 class  CsgoDataset(Dataset):
