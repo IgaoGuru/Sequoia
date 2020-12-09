@@ -24,22 +24,22 @@ print(f"opencv version: {cv2.__version__}")
 
 print("")
 
-SEED = 42
+SEED = 21
 IMG_SIZE_X = 1280
 IMG_SIZE_Y = 720
 
 torch.manual_seed(SEED)
-n_img_size = 28
-num_epochs = 200
+n_img_size = 100
+num_epochs = 500
 scale_factor = 1
 # checkpoints = [14, 19, 49, 79, 99, 119, 149, 179, 199] #all epoch indexes where the network should be saved
 checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999]
-model_number = 5 #currently using '999' as "disposable" model_number :)
+model_number = 10 #currently using '999' as "disposable" model_number :)
 batch_size = 16
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
-dlength = 1000 # leave None for maximum dataset length
+dlength = 10000 # leave None for maximum dataset length
 
 # dataset_path = "C:\\Users\\User\\Documents\\GitHub\\Csgo-NeuralNetworkPaulo\\data\\datasets\\"  #remember to put "/" at the end
 dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
@@ -47,7 +47,9 @@ dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
 model_save_path = 'E:\\Documento\\output_nn\\'
 
 #OPTIMIZER PARAMETERS ###############
-lr = 1
+lr = 0.1 
+lrs = [1e-2, 1e-3, 1e-4, 1e-4, 1e-4, 1e-4, 1e-5, 1e-5]
+lr_idx = 0
 weight_decay = 0
 
 if torch.cuda.is_available():
@@ -92,7 +94,7 @@ val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, collate_fn
 
 
 criterion = CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), weight_decay=weight_decay)
+optimizer = optim.Adam(model.parameters(), weight_decay=weight_decay, lr=lr)
 log_interval = len(train_loader) // 1
 log_interval_val = len(val_loader) // 1
 
@@ -121,6 +123,7 @@ def train_cycle():
     }
 
     model_save_path_new = f"{model_save_path}model#{model_number}"  
+    lr_idx = 0
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         tic = time()
@@ -153,7 +156,6 @@ def train_cycle():
             optimizer.zero_grad()
 
             preds = model(imgs)
-
             loss = criterion(preds, labels_cat)
             acc = binary_acc(preds, labels_cat)
 
@@ -204,11 +206,6 @@ def train_cycle():
             running_loss_val += loss.item() 
             running_acc_val += acc.item()
 
-            # #forward prop
-            # bboxes_pred, pred_cls, pred_scores = fastercnn.get_prediction_fastercnn(
-            #     imgs[0].to(device), net, threshold, category_names=categories, img_is_path=False)
-            # cls_gt = np.array(categories)[[t.item() for t in targets[0]]]
-
             if (i + 1) % log_interval_val == 0:
                 print('%s ::Validation:: [%d, %5d] loss: %.5f' %
                     (model_number, epoch + 1, i + 1, running_loss_val / log_interval_val))
@@ -223,5 +220,9 @@ def train_cycle():
                     with open(f'{model_save_path_new}-train', 'wb') as filezin:
                         pickle.dump(loss_total_dict, filezin)
         print("\n")
+        # if lr_idx < len(lrs):
+        #     lr_idx += 1
+        # optimizer.param_groups[0]['lr'] = lrs[lr_idx]
+        # print(optimizer.param_groups[0]["lr"])
 
 train_cycle()

@@ -17,11 +17,17 @@ from datasetcsgo import CsgoDataset
 class Light_Classifier(torch.nn.Module):
    def __init__(self):
       super(Light_Classifier, self).__init__()
-      self.conv1 = self.conv_block(c_in = 3, c_out = 12, kernel_size = 3, stride = 1, padding = 1)
-      self.conv2 = self.conv_block(c_in = 12, c_out = 3, kernel_size = 3, stride = 1, padding = 1)
-      self.fc1 = nn.Linear(147, 2)
-      self.fc2 = nn.Linear(64, 10)
+      self.conv1 = self.conv_block(c_in = 3, c_out = 15, kernel_size = 3, stride = 1, padding = 1)
+      self.conv2 = self.conv_block(c_in = 15, c_out = 12, kernel_size = 3, stride = 1, padding = 1)
+      self.conv3 = self.conv_block(c_in = 12, c_out = 3, kernel_size = 3, stride = 1, padding = 1)
+      # 28px --> ???
+      # 100px --> 432
+      self.bigN = 432
+      self.fc1 = nn.Linear(self.bigN, 64)
+      self.fc2 = nn.Linear(64, 9)
+      self.fc3 = nn.Linear(9, 2)
       self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+      self.ReLU = nn.ReLU()
 
    def conv_block(self, c_in, c_out, dropout=0.1, kernel_size=3, stride=1, **kwargs):
       seq_block = nn.Sequential(
@@ -38,9 +44,14 @@ class Light_Classifier(torch.nn.Module):
 
       x = self.conv2(x)
       x = self.maxpool(x)
-      x = x.reshape((-1, 147))
 
-      x = self.fc1(x)
+      x = self.conv3(x)
+      x = self.maxpool(x)
+      x = x.reshape((-1, self.bigN))
+
+      x = self.ReLU(self.fc1(x))
+      x = self.ReLU(self.fc2(x))
+      x = self.ReLU(self.fc3(x))
       return x
 
 class Light_Dataset(CsgoDataset):

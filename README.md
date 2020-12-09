@@ -15,44 +15,37 @@ After inference, the bounding boxes are processed by the **yolo_inference.py** f
 **DISCLAIMER: This software was developed with the intention of only being used in private matches, as a proof of concept, causing no harm to other player's experiences. If you wish to cheat in online matches, be aware that there are many other much more practical and efficient ways of doing so.**
 
 ## Prerequisites
-* [Python 8.x](https://python.org) with the following additional libraries:
+* [Python 8.x](https://python.org) additional libraries:
 
     <details>
     <summary> list of required libraries:</summary>
-    <br>
-    * mss
+
+    ahk>=0.11.1
+    Cython
+    matplotlib>=3.2.2
+    mss>=6.1.0
+    numpy>=1.18.5
+    opencv-python>=4.1.2
+    pandas>=1.1.5
+    pillow
+    PyYAML>=5.3
+    scipy>=1.4.1
+    tensorboard>=2.2
+    torch>=1.6.0
+    torchvision>=0.7.0
+    tqdm>=4.41.0
+
     </details>
 
-After installing python, you can install all the necessary libraries with the following command:
-    ```
-    pip3 install mss numpy opencv-python pandas
-    ```
-<details>
-<summary> Open this if you want to compile from source and modify the code</summary>
-<br>
+    After installing python, you can install all the necessary libraries with the following command:
+        ```
+        pip install -r requirements.txt
+        ```
 
-### Downloading
+* **strongly recommended**: [CUDA Toolkit 10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Windows&target_arch=x86_64&target_version=10&target_type=exelocal):
+    CUDA is Nvidia's framework for high performance GPU computing. This software uses it to run the AI inside the GPU, instead of relying on the CPU, which is much slower. This means **you need an Nvidia GPU** to get the best possible performance out of the software.
 
-#### With [git](https://git-scm.com)
-
-Open git command prompt and enter following command:
-```
-git clone https://github.com/IgaoGuru/csgo-data.git
-```
-`csgo-data` folder should have been succesfully created, containing all the source files.
-
-### Compiling from source
-
-When you have equiped a copy of source code, next step is opening **Osiris.sln** in Microsoft Visual Studio 2019.
-
-Then change build configuration to `Release | x86` and simply press **Build solution**.
-
-If everything went right you should receive `Osiris.dll`  binary file.
-
-When injected, menu is openable under `INSERT` key.
-</details>
-
-## Collecting data
+## Test
 
 You can download the already compiled dll, and inject it into the game either with [Extreme injector](https://github.com/master131/ExtremeInjector/releases/tag/v3.7.3) (recommended), or [Xenos Injector](https://github.com/DarthTon/Xenos/releases/tag/2.3.2).
 
