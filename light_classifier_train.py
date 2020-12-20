@@ -25,16 +25,13 @@ print(f"opencv version: {cv2.__version__}")
 print("")
 
 SEED = 21
-IMG_SIZE_X = 1280
-IMG_SIZE_Y = 720
 
 torch.manual_seed(SEED)
 n_img_size = 100
 num_epochs = 500
 scale_factor = 1
-# checkpoints = [14, 19, 49, 79, 99, 119, 149, 179, 199] #all epoch indexes where the network should be saved
-checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999]
-model_number = 10 #currently using '999' as "disposable" model_number :)
+checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999] #all epoch indexes where the network should be saved
+model_number = 11 #currently using '999' as "disposable" model_number :)
 batch_size = 16
 convs_backbone = 1
 out_channels_backbone = 4
@@ -47,8 +44,7 @@ dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
 model_save_path = 'E:\\Documento\\output_nn\\'
 
 #OPTIMIZER PARAMETERS ###############
-lr = 0.1 
-lrs = [1e-2, 1e-3, 1e-4, 1e-4, 1e-4, 1e-4, 1e-5, 1e-5]
+lr = 0.001 
 lr_idx = 0
 weight_decay = 0
 
@@ -59,7 +55,6 @@ else:
     device = torch.device("cpu")
     print('running on: CPU')
 
-# model = Light_Classifier(num_convs_backbone=convs_backbone, num_backbone_out_channels=out_channels_backbone)
 model = Light_Classifier()
 
 def init_weights(m):
@@ -73,8 +68,11 @@ model = model.to(device)
 print(model)
 
 transform = transforms.Compose([
-    transforms.Resize([int(IMG_SIZE_X*scale_factor), int(IMG_SIZE_Y*scale_factor)]),
-    transforms.ToTensor(), # will put the image range between 0 and 1
+    #mean and std calculated from 100k dataset - see more in "findmeanstd.py file"
+    transforms.Normalize(mean=[79.29117544808655, 70.79513926913451, 60.948315409534956], \
+                        std=[50.36878945074385, 44.904560780963074, 39.40949111442829]),
+    # transforms.Resize([int(IMG_SIZE_X*scale_factor), int(IMG_SIZE_Y*scale_factor)]),
+    transforms.ToTensor() 
 ])
 
 #load dataset
@@ -94,7 +92,7 @@ val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, collate_fn
 
 
 criterion = CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), weight_decay=weight_decay, lr=lr)
+optimizer = optim.Adam(model.parameters(), lr=lr)
 log_interval = len(train_loader) // 1
 log_interval_val = len(val_loader) // 1
 

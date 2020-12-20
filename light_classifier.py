@@ -34,7 +34,7 @@ class Light_Classifier(torch.nn.Module):
          nn.Conv2d(in_channels=c_in, out_channels=c_out, kernel_size=kernel_size, **kwargs),
          nn.BatchNorm2d(num_features=c_out),
          nn.ReLU(),
-         nn.Dropout2d(p=dropout)
+         # nn.Dropout2d(p=dropout)
       )
       return seq_block
 
@@ -55,7 +55,7 @@ class Light_Classifier(torch.nn.Module):
       return x
 
 class Light_Dataset(CsgoDataset):
-   def __init__(self, root_path, img_size=1000, transform=None, scale_factor=None, dlength=None):
+   def __init__(self, root_path, img_size=100, transform=None, scale_factor=None, dlength=None):
       print('building dataset! please wait a moment')
       super().__init__(root_path, dlength=dlength)
       self.img_size = img_size
@@ -68,6 +68,9 @@ class Light_Dataset(CsgoDataset):
 
       img = img.crop(bbox.tolist())
       img = img.resize((self.img_size, self.img_size))
+
+      if self.transform:
+         img = self.transform(img)
 
       return img, label
 
