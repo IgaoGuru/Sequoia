@@ -32,7 +32,7 @@ num_epochs = 500
 scale_factor = 1
 checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999] #all epoch indexes where the network should be saved
 model_number = 11 #currently using '999' as "disposable" model_number :)
-batch_size = 16
+batch_size = 128
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
@@ -44,7 +44,7 @@ dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
 model_save_path = 'E:\\Documento\\output_nn\\'
 
 #OPTIMIZER PARAMETERS ###############
-lr = 0.001 
+lr = 0.2 
 lr_idx = 0
 weight_decay = 0
 
@@ -102,7 +102,7 @@ print(f"Please wait for first logging of the training")
 
 #safety toggle to make sure no files are overwritten by accident while testing!
 if model_number != 999:
-    safety_toggle = input('ATTENTION: MODEL NUMBER IS :{model_number}:\
+    safety_toggle = input(f'ATTENTION: MODEL NUMBER IS :{model_number}:\
         ANY FILES WITH THE SAME MODEL NUMBER WILL BE DELETED. Continue? (Y/n):')
     if safety_toggle != 'Y' and safety_toggle != 'y':
         raise ValueError('Please change the model number to 999, or choose to continue')

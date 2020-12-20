@@ -25,7 +25,7 @@ print(f"opencv version: {cv2.__version__}")
 print("")
 
 #path to model to be loaded
-model_path = "E:\\Documento\\output_nn\\model#1e19.th"
+model_path = "E:\\Documento\\output_nn\\model#7e19.th"
 IMG_SIZE = 28
 
 if torch.cuda.is_available():

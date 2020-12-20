@@ -118,10 +118,11 @@ if model_number != 999:
 
 def train_cycle():
     loss_total_dict = { 
-        'num_epochs' : num_epochs,
+        'num_epochs' : 0,
         'lr' : lr,
         'weight_decay' : weight_decay,
         'seed' : SEED,
+        'dset_size' : len(dataset),
         'loss_sum' : [],
         'loss_classifier' : [],
         'loss_box_reg' : [],
@@ -191,6 +192,7 @@ def train_cycle():
                     (model_number, epoch + 1, i + 1, running_loss / log_interval))
                 print([(k, v.item()) for k, v in loss_dict.items()])
 
+                loss_total_dict['num_epochs'] = epoch
                 loss_total_dict['loss_sum'].append(sum(j for j in loss_per_epoch['loss_sum']) / i) 
                 loss_total_dict['loss_classifier'].append(sum(j for j in loss_per_epoch['loss_classifier']) / i) 
                 loss_total_dict['loss_box_reg'].append(sum(j for j in loss_per_epoch['loss_box_reg']) / i) 
@@ -254,6 +256,7 @@ def train_cycle():
                 running_loss = 0.0
 
                 if epoch in checkpoints: 
+                    loss_total_dict['num_epochs'] = epoch
                     loss_total_dict['loss_sum_val'] = loss_total_dict_val['loss_sum']
                     loss_total_dict['loss_classifier_val'] = loss_total_dict_val['loss_sum']
                     loss_total_dict['loss_box_reg_val'] = loss_total_dict_val['loss_sum']

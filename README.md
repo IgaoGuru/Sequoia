@@ -44,11 +44,11 @@ After inference, the bounding boxes are processed by the **yolo_inference.py** f
 * **strongly recommended**: [CUDA Toolkit 10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Windows&target_arch=x86_64&target_version=10&target_type=exelocal):
     CUDA is Nvidia's framework for high performance GPU computing. This software uses it to run the AI inside the GPU, instead of relying on the CPU, which is much slower. This means **you need an Nvidia GPU** to get the best possible performance out of the software.
 
-## Test
+## Setting up for inference
 
-You can download the already compiled dll, and inject it into the game either with [Extreme injector](https://github.com/master131/ExtremeInjector/releases/tag/v3.7.3) (recommended), or [Xenos Injector](https://github.com/DarthTon/Xenos/releases/tag/2.3.2).
+If you want to test out the model, you can do so using the `yolo_detect.py` file. There are some parameters you will need to configure before running the program:
 
-### Setting up the game
+## Training on custom data
 
 Remember to configurate steam to start CS:GO in [insecure mode](https://csgg.in/csgo-guide-to-launch-options/) (with the "-untrusted") flag), and run the game. This flag will ensure that Valve's anticheat isn't activated when you inject the dll (eliminating the risk of banning you steam account from cs:go's servers).
 
