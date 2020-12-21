@@ -44,9 +44,14 @@ After inference, the bounding boxes are processed by the **yolo_inference.py** f
 * **strongly recommended**: [CUDA Toolkit 10.2](https://developer.nvidia.com/cuda-10.2-download-archive?target_os=Windows&target_arch=x86_64&target_version=10&target_type=exelocal):
     CUDA is Nvidia's framework for high performance GPU computing. This software uses it to run the AI inside the GPU, instead of relying on the CPU, which is much slower. This means **you need an Nvidia GPU** to get the best possible performance out of the software.
 
+## Neural Network Structure
+
 ## Setting up for inference
 
-If you want to test out the model, you can do so using the `yolo_detect.py` file. There are some parameters you will need to configure before running the program:
+If you want to test out the model, you can do so using the `yolo_detect.py` file. 
+By default
+There are some parameters you will need to configure before running the program:
+
 
 ## Training on custom data
 

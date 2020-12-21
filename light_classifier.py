@@ -22,6 +22,7 @@ class Light_Classifier(torch.nn.Module):
       self.conv3 = self.conv_block(c_in = 12, c_out = 3, kernel_size = 3, stride = 1, padding = 1)
       # 28px --> ???
       # 100px --> 432
+      # self.bigN = 432
       self.bigN = 432
       self.fc1 = nn.Linear(self.bigN, 64)
       self.fc2 = nn.Linear(64, 9)
@@ -39,6 +40,7 @@ class Light_Classifier(torch.nn.Module):
       return seq_block
 
    def forward(self, x):
+      print('0', x.shape)
       x = self.conv1(x)
       x = self.maxpool(x)
 
@@ -47,8 +49,10 @@ class Light_Classifier(torch.nn.Module):
 
       x = self.conv3(x)
       x = self.maxpool(x)
+      print('1', x.shape)
       x = x.reshape((-1, self.bigN))
 
+      print('2', x.shape)
       x = self.ReLU(self.fc1(x))
       x = self.ReLU(self.fc2(x))
       x = self.ReLU(self.fc3(x))

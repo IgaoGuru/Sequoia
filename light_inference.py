@@ -25,8 +25,9 @@ print(f"opencv version: {cv2.__version__}")
 print("")
 
 #path to model to be loaded
-model_path = "E:\\Documento\\output_nn\\model#7e19.th"
-IMG_SIZE = 28
+# model_path = "E:\\Documento\\output_nn\\model#7e19.th"
+model_path = "light_classifierV1.th"
+IMG_SIZE = 100
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -45,6 +46,9 @@ def light_run(img, bbox):
     img = img.crop(tuple(bbox))
     img = img.resize((IMG_SIZE, IMG_SIZE))
     img = nparray(img) 
+    # cv2.imshow("igor", img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
     img = nptranspose(img, (2, 0, 1))
     img = img[npnewaxis, ...]
     img = torch.from_numpy(img).float().to(device)
