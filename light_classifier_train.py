@@ -9,6 +9,7 @@ from numpy import transpose as nptranspose
 from light_classifier import Light_Classifier
 from light_classifier import binary_acc
 from light_classifier import Light_Dataset
+from light_classifier import Heavy_Classifier
 
 import torch
 import torchvision
@@ -24,19 +25,19 @@ print(f"opencv version: {cv2.__version__}")
 
 print("")
 
-SEED = 21
+SEED = 24
 
 torch.manual_seed(SEED)
-n_img_size = 100
-num_epochs = 500
+n_img_size = 32
+num_epochs = 5000
 scale_factor = 1
-checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999] #all epoch indexes where the network should be saved
-model_number = 11 #currently using '999' as "disposable" model_number :)
+checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999, 1199, 1299, 1399, 1499, 1799, 1999] #all epoch indexes where the network should be saved
+model_number = 14 #currently using '999' as "disposable" model_number :)
 batch_size = 128
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
-dlength = 10000 # leave None for maximum dataset length
+dlength = 50000 # leave None for maximum dataset length
 
 # dataset_path = "C:\\Users\\User\\Documents\\GitHub\\Csgo-NeuralNetworkPaulo\\data\\datasets\\"  #remember to put "/" at the end
 dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
@@ -44,7 +45,7 @@ dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
 model_save_path = 'E:\\Documento\\output_nn\\'
 
 #OPTIMIZER PARAMETERS ###############
-lr = 0.2 
+lr = 0.02 
 lr_idx = 0
 weight_decay = 0
 
@@ -55,7 +56,8 @@ else:
     device = torch.device("cpu")
     print('running on: CPU')
 
-model = Light_Classifier()
+# model = Light_Classifier()
+model = Heavy_Classifier()
 
 def init_weights(m):
     if type(m) == nn.Linear or type(m) == nn.Conv2d:
@@ -110,8 +112,9 @@ if model_number != 999:
 
 def train_cycle():
     loss_total_dict = { 
-        'num_epochs' : num_epochs,
+        'epochs' : 0,
         'lr' : lr,
+        'dset_size' : len(dataset),
         'weight_decay' : weight_decay,
         'seed' : SEED,
         'losses' : [],
@@ -154,6 +157,7 @@ def train_cycle():
             optimizer.zero_grad()
 
             preds = model(imgs)
+            # print(labels)
             loss = criterion(preds, labels_cat)
             acc = binary_acc(preds, labels_cat)
 
@@ -164,6 +168,7 @@ def train_cycle():
                 print('%s ::Training:: [%d, %5d] loss: %.5f' %
                     (model_number, epoch + 1, i + 1, running_loss / log_interval))
 
+                loss_total_dict['epochs'] = epoch 
                 loss_total_dict['losses'].append(running_loss/log_interval) 
                 loss_total_dict['accuracies'].append(running_acc/log_interval) 
                 running_loss = 0.0
@@ -209,6 +214,7 @@ def train_cycle():
                     (model_number, epoch + 1, i + 1, running_loss_val / log_interval_val))
                 print(f'Taking (precisely) {(time()-tic)/60} minutes per epoch')
 
+                loss_total_dict['epochs'] = epoch
                 loss_total_dict['losses_val'].append(running_loss_val/log_interval_val) 
                 loss_total_dict['accuracies_val'].append(running_acc_val/log_interval_val) 
                 running_loss_val = 0.0
