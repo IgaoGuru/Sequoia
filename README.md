@@ -49,8 +49,8 @@ After inference, the bounding boxes are processed by the **yolo_inference.py** f
 ## Neural Network Structure
 
 I've drawn this sketch/diagram to illustrate the high-level structure of the AI.
-(sorry for not being good at drawing, my only drawing experience was a snake swallowing an elephant)
-
+![](readmes/sketch.png)
+![](readmes/light_classifier_diagram.png)
 First, the screenshot is taken from the `detect.py` file. After being reshaped into the appropriate dimensions (1, 3, 512, 512), it first goes into the fine-tuned YOLO v.5. After YOLO's processing, the 512x512 image is cropped using the coordinates given by the first NN. From there, the cropped image is resized into a 32x32 image enclosing only the player to be classified. The second NN (Light_Classifier) then returns the final classification results, and the coordinates from YOLO are combined with Light's classification to form the final, complete output.
 
 ## Setting up for inference

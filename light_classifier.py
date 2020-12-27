@@ -46,9 +46,11 @@ class Light_Classifier(torch.nn.Module):
       x = self.conv1(x)
       x = self.maxpool(x)
 
+      print(x.shape)
       x = self.conv2(x)
       x = self.maxpool(x)
 
+      print(x.shape)
       x = self.conv3(x)
       x = self.maxpool(x)
       x = x.reshape((-1, self.bigN))
