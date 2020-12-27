@@ -23,7 +23,8 @@ from utils.general import (apply_classifier, check_img_size,
 ahk = AHK()
 
 parser = argparse.ArgumentParser(description='Detect on CS:GO')
-parser.add_argument('-w', help='absolute path to location of custom weights (optional)', type=str, nargs='?', default='sequoiaV1.pt')
+parser.add_argument('-w', help='absolute path to custom weights for YOLO(optional)', type=str, nargs='?', default='sequoiaV1.pt')
+parser.add_argument('-wl', help='absolute path to custom weights for Light_Classifier', type=str, nargs='?', default='light_classifierV1.th')
 parser.add_argument('-s', help='absolute path to directory where images from detection can be saved (optional)', type=str, nargs='?', default=None)
 parser.add_argument('-x', help='the x component of your game\'s resolution eg.([1280] x 720)', type=int, nargs='?', default=1280)
 parser.add_argument('-y', help='the x component of your game\'s resolution eg.(1280 x [720])', type=int, nargs='?', default=720)

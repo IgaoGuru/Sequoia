@@ -1,9 +1,10 @@
-import pickle
 import cv2
-from os.path import join
+import pickle
+import argparse
 from os import mkdir
 from tqdm import tqdm
 from time import time
+from os.path import join
 from numpy import array as nparray
 from numpy import asarray as npasarray
 from numpy import transpose as nptranspose
@@ -29,28 +30,46 @@ print(f"opencv version: {cv2.__version__}")
 
 print("")
 
-SEED = 24
+parser = argparse.ArgumentParser(description='Detect on CS:GO')
+parser.add_argument('-i', help='string identifier for the model', type=str)
+parser.add_argument('-e', help='number of epochs to be trained', type=int)
+parser.add_argument('-b', help='batch_size', type=int)
+parser.add_argument('-dp', help='path to dataset', type=str)
+parser.add_argument('-sp', help='path to root directory where models will be saved', type=str)
+parser.add_argument('-n', help='the shape (n x n), in pixels, of the inference image for light_classifier', type=int, nargs='?', default=32)
+parser.add_argument('-s', help='torch random seed (for dataset splitting and shuffling)', type=int, nargs='?', default=42)
+parser.add_argument('-dl', help='length of dataset', type=int, nargs='?', default=None)
+parser.add_argument('-lr', help='weight_decay', type=int, nargs='?', default=0.003)
+parser.add_argument('-wd', help='weight_decay', type=int, nargs='?', default=0)
+args = parser.parse_args()
+
+weights = args.w
+
+SEED = args.s
 torch.manual_seed(SEED)
-model_number = 999 #currently using '999' as "disposable" model_number :)
-n_img_size = 32
-num_epochs = 100
+model_number = args.i 
+n_img_size = args. 
+num_epochs = args.e
 scale_factor = 1
-checkpoints = [0, 14, 16, 18, 19, 21, 24, 26, 29, 32, 34, 37, 39, 41, 43, 45, 47, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999, 1199, 1299, 1399, 1499, 1799, 1999] #all epoch indexes where the network should be saved
-batch_size = 16
-convs_backbone = 1
-out_channels_backbone = 4
-reg_weight = 1 # leave 1 for no weighting
-dlength = 2 # leave None for maximum dataset length
+batch_size = args.b 
+dlength = args.dl 
+dataset_path = args.dp 
+model_save_path = args.sp 
+lr = args.lr 
+weight_decay = args.wd 
 
-# dataset_path = "C:\\Users\\User\\Documents\\GitHub\\Csgo-NeuralNetworkPaulo\\data\\datasets\\"  #remember to put "/" at the end
-dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
-# dataset_path = "/home/sequoia/data/"
-model_save_path = 'E:\\Documento\\output_nn\\'
-
-#OPTIMIZER PARAMETERS ###############
-lr = 0.02 
-lr_idx = 0
-weight_decay = 0
+# SEED = 24
+# torch.manual_seed(SEED)
+# model_number = 999 #currently using '999' as "disposable" model_number :)
+# n_img_size = 32
+# num_epochs = 100
+# scale_factor = 1
+# batch_size = 16
+# dlength = 2 # leave None for maximum dataset length
+# dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
+# model_save_path = 'E:\\Documento\\output_nn\\'
+# lr = 0.02 
+# weight_decay = 0
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -133,7 +152,6 @@ def train_cycle():
     model_save_path_new = join(model_save_path, str(model_number))
     mkdir(model_save_path_new)
 
-    lr_idx = 0
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         tic = time()
@@ -235,16 +253,12 @@ def train_cycle():
                     torch.save(model.state_dict(), join(model_save_path_new, "best_val") + '.th')
 
                 if epoch in checkpoints: 
-                    with open(f'{model_save_path_new}-train', 'wb') as filezin:
+                    with open(join(model_save_path_new, str(model_number))+"-train", 'wb') as filezin:
                         pickle.dump(loss_total_dict, filezin)
 
                 running_loss_val = 0.0
                 running_acc_val = 0.0
 
         print("\n")
-        # if lr_idx < len(lrs):
-        #     lr_idx += 1
-        # optimizer.param_groups[0]['lr'] = lrs[lr_idx]
-        # print(optimizer.param_groups[0]["lr"])
 
 train_cycle()
