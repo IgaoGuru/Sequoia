@@ -26,15 +26,15 @@ print("")
 
 #path to model to be loaded
 # model_path = "E:\\Documento\\output_nn\\model#7e19.th"
-model_path = "light_classifierV1.th"
-IMG_SIZE = 100
+model_path = "light_classifier_v1.th"
+IMG_SIZE = 32
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
-    print("Running on: %s"%(torch.cuda.get_device_name(device)))
+    print("Light_inference running on: %s"%(torch.cuda.get_device_name(device)))
 else:
     device = torch.device("cpu")
-    print('running on: CPU')
+    print('Light_inference running on: CPU')
 
 # model = Light_Classifier(num_convs_backbone=convs_backbone, num_backbone_out_channels=out_channels_backbone)
 model = Light_Classifier()
@@ -43,16 +43,16 @@ model.to(device)
 model.eval()
 
 def light_run(img, bbox):
-    img = img.crop(tuple(bbox))
-    img = img.resize((IMG_SIZE, IMG_SIZE))
-    img = nparray(img) 
-    # cv2.imshow("igor", img)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-    img = nptranspose(img, (2, 0, 1))
+    bbox = list(map(int, bbox))
+    img = cv2.resize(img, dsize=(512, 512))
+    img = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+    img = cv2.resize(img, dsize=(IMG_SIZE, IMG_SIZE))
+    # cv2.imshow("guru", img)
+    # if cv2.waitKey(1) == ord('q'):  # q to quit
+    #     raise StopIteration
     img = img[npnewaxis, ...]
+    img = nptranspose(img, (0, 3, 1, 2))
     img = torch.from_numpy(img).float().to(device)
-
     preds = model(img) 
-    print("LIGHT PREDS: ", preds)
+    return preds
 

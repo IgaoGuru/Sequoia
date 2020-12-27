@@ -1,0 +1,1 @@
+light_classifier_v1 = model#777e16

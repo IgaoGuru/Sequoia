@@ -10,12 +10,14 @@ from light_classifier import Light_Classifier
 from light_classifier import binary_acc
 from light_classifier import Light_Dataset
 from light_classifier import Heavy_Classifier
+from light_classifier import Ultra_Light_Classifier
 
 import torch
 import torchvision
 import torch.optim as optim
 from torchvision import transforms
 from torch.nn import CrossEntropyLoss
+from torch.nn import BCELoss
 from torch.utils.data.dataloader import DataLoader
 
 print(f"torch version: {torch.__version__}")
@@ -29,15 +31,15 @@ SEED = 24
 
 torch.manual_seed(SEED)
 n_img_size = 32
-num_epochs = 5000
+num_epochs = 100
 scale_factor = 1
-checkpoints = [0, 14, 19, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999, 1199, 1299, 1399, 1499, 1799, 1999] #all epoch indexes where the network should be saved
-model_number = 14 #currently using '999' as "disposable" model_number :)
-batch_size = 128
+checkpoints = [0, 14, 16, 18, 19, 21, 24, 26, 29, 32, 34, 37, 39, 41, 43, 45, 47, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999, 1199, 1299, 1399, 1499, 1799, 1999] #all epoch indexes where the network should be saved
+model_number = 777 #currently using '999' as "disposable" model_number :)
+batch_size = 64
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
-dlength = 50000 # leave None for maximum dataset length
+dlength = 60000 # leave None for maximum dataset length
 
 # dataset_path = "C:\\Users\\User\\Documents\\GitHub\\Csgo-NeuralNetworkPaulo\\data\\datasets\\"  #remember to put "/" at the end
 dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
@@ -56,8 +58,9 @@ else:
     device = torch.device("cpu")
     print('running on: CPU')
 
-# model = Light_Classifier()
-model = Heavy_Classifier()
+# model = Ultra_Light_Classifier()
+model = Light_Classifier()
+# model = Heavy_Classifier()
 
 def init_weights(m):
     if type(m) == nn.Linear or type(m) == nn.Conv2d:
@@ -93,7 +96,8 @@ train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, collat
 val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, collate_fn=my_collate_2)
 
 
-criterion = CrossEntropyLoss()
+# criterion = CrossEntropyLoss()
+criterion = BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=lr)
 log_interval = len(train_loader) // 1
 log_interval_val = len(val_loader) // 1
@@ -149,15 +153,16 @@ def train_cycle():
             imgs = torch.from_numpy(imgs).float().to(device)
             
             #transform list of 0 dim tensors into one 1 dim tensor
-            labels_cat = torch.tensor([])
-            for label in labels:
-                labels_cat = torch.cat((label.view(1), labels_cat))
-            labels_cat = labels_cat.long().to(device)
+            labels_cat = torch.tensor([label.item() for label in labels]).float().reshape((-1, 1))
+            labels_cat = labels_cat.to(device)
 
             optimizer.zero_grad()
 
             preds = model(imgs)
+            # print(preds)
+            # print(preds.shape)
             # print(labels)
+            # print(labels_cat.shape)
             loss = criterion(preds, labels_cat)
             acc = binary_acc(preds, labels_cat)
 
@@ -195,10 +200,8 @@ def train_cycle():
             imgs = torch.from_numpy(imgs).float().to(device)
             
             #transform list of 0 dim tensors into one 1 dim tensor
-            labels_cat = torch.tensor([])
-            for label in labels:
-                labels_cat = torch.cat((label.view(1), labels_cat))
-            labels_cat = labels_cat.long().to(device)
+            labels_cat = torch.tensor([label.item() for label in labels]).float().reshape((-1, 1))
+            labels_cat = labels_cat.to(device)
 
             #running model
             preds = model(imgs)

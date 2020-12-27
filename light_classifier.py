@@ -1,6 +1,7 @@
 import torch
 import torchvision
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.transforms as T
 from torch.utils.data import Dataset
 
@@ -22,15 +23,15 @@ class Light_Classifier(torch.nn.Module):
       self.conv1 = self.conv_block(c_in = 3, c_out = 15, kernel_size = 3, stride = 1, padding = 1)
       self.conv2 = self.conv_block(c_in = 15, c_out = 12, kernel_size = 3, stride = 1, padding = 1)
       self.conv3 = self.conv_block(c_in = 12, c_out = 3, kernel_size = 3, stride = 1, padding = 1)
-      # 28px --> ???
+      # 32px --> 48
       # 100px --> 432
       # self.bigN = 432
-      self.bigN = 432
-      self.fc1 = nn.Linear(self.bigN, 64)
-      self.fc2 = nn.Linear(64, 9)
-      self.fc3 = nn.Linear(9, 2)
+      self.bigN = 48
+      self.fc1 = nn.Linear(self.bigN, 32)
+      self.fc2 = nn.Linear(32, 16)
+      self.fc3 = nn.Linear(16, 1)
       self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
-      self.ReLU = nn.ReLU()
+      # self.prefc1 = nn.Linear(self.bigN, )
 
    def conv_block(self, c_in, c_out, dropout=0.1, kernel_size=3, stride=1, **kwargs):
       seq_block = nn.Sequential(
@@ -52,9 +53,9 @@ class Light_Classifier(torch.nn.Module):
       x = self.maxpool(x)
       x = x.reshape((-1, self.bigN))
 
-      x = self.ReLU(self.fc1(x))
-      x = self.ReLU(self.fc2(x))
-      x = self.ReLU(self.fc3(x))
+      x = F.relu(self.fc1(x))
+      x = F.relu(self.fc2(x))
+      x = torch.sigmoid(self.fc3(x))
       return x
 
 class Heavy_Classifier(torch.nn.Module):
@@ -97,12 +98,49 @@ class Heavy_Classifier(torch.nn.Module):
       x = self.maxpool(x)
       x = x.reshape((-1, self.bigN))
 
-      x = nn.functional.relu(self.fc1(x))
-      x = nn.functional.relu(self.fc2(x))
-      x = torch.sigmoid(self.fc3(x))
-      x = nn.functional.relu(x)
+      x = F.relu(self.fc1(x))
+      x = F.relu(self.fc2(x))
+      x = F.relu(self.fc3(x))
+      # x = F.relu(x)
       # x = torch.sigmoid(self.fc3(x))
       return x
+
+class Ultra_Light_Classifier(torch.nn.Module):
+   def __init__(self):
+      super(Ultra_Light_Classifier, self).__init__()
+      self.conv1 = self.conv_block(c_in = 3, c_out = 64, kernel_size = 3, stride = 1, padding = 2, dropout=0.1)
+      self.conv2 = self.conv_block(c_in = 64, c_out = 32, kernel_size = 3, stride = 1, padding = 2, dropout=0.1)
+      self.conv3 = self.conv_block(c_in = 32, c_out = 16, kernel_size = 3, stride = 1, padding = 2, dropout=0.1)
+      self.lastcnn = nn.Conv2d(in_channels=16, out_channels=2, kernel_size=3, stride=1, padding=0)
+      # 32px --> 3840
+      self.bigN = 3840
+      self.fc1 = nn.Linear(self.bigN, 1024)
+      self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+      # self.prefc1 = nn.Linear(self.bigN, )
+
+   def conv_block(self, c_in, c_out, dropout=0.1, kernel_size=3, stride=1, **kwargs):
+      seq_block = nn.Sequential(
+         nn.Conv2d(in_channels=c_in, out_channels=c_out, kernel_size=kernel_size, **kwargs),
+         nn.BatchNorm2d(num_features=c_out),
+         nn.ReLU(),
+         # nn.Dropout2d(p=dropout)
+      )
+      return seq_block
+
+   def forward(self, x):
+
+      x = self.conv1(x)
+      x = self.maxpool(x)
+
+      x = self.conv2(x)
+
+      x = self.conv3(x)
+      x = self.maxpool(x)
+
+      x = self.lastcnn(x)
+
+      return x
+
 
 class Light_Dataset(CsgoDataset):
    def __init__(self, root_path, img_size=100, transform=None, scale_factor=None, dlength=None):
@@ -139,21 +177,23 @@ def binary_acc(y_pred, y_test):
 # ct = 0
 # tr = 0
 # for i in tqdm(range(4000)):
-   # -- for checking image quality ---
-   # u = randint(1, 4000)
-   # sample = dset[u]
-   # img = sample[0]
-   # img = np.array(img)
-   # img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-   # cv2.imshow("igor", img)
-   # cv2.waitKey(0)
-   # cv2.destroyAllWindows()
+#    # -- for checking image quality ---
+#    u = randint(1, 4000)
+#    sample = dset[u]
+#    img = sample[0]
+#    label = sample[1].item()
+#    img = img.resize([600,600])
+#    img = np.array(img)
+#    img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+#    cv2.imshow(f"igor - {label}", img)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
    
-   #--for checking parity ---
-   # sample = dset[u]
-   # _, label = sample
-   # if label.item() == 0:
-   #    ct += 1
-   # else:
-   #    tr += 1
+#    --for checking parity ---
+#    sample = dset[u]
+#    _, label = sample
+#    if label.item() == 0:
+#       ct += 1
+#    else:
+#       tr += 1
 # print(f"ct {ct}, tr: {tr}")

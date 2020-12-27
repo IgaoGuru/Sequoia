@@ -60,6 +60,8 @@ class  CsgoDataset(Dataset):
     (('ct', 'tr', 'tr'), ((bbox1)(bbox2)(bbox3)))
     where 'ct'corresponds to bbox1, the first 'tr' to bbox2 and the second 'tr' to bbox3
 
+    For the labels, tr = 0 and ct = 1.
+
     Args:
         dataset_root_path (str): absolute path to directory containing session folder
         session_name (str): session folder's name
