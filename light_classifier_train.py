@@ -39,16 +39,14 @@ parser.add_argument('-sp', help='path to root directory where models will be sav
 parser.add_argument('-n', help='the shape (n x n), in pixels, of the inference image for light_classifier', type=int, nargs='?', default=32)
 parser.add_argument('-s', help='torch random seed (for dataset splitting and shuffling)', type=int, nargs='?', default=42)
 parser.add_argument('-dl', help='length of dataset', type=int, nargs='?', default=None)
-parser.add_argument('-lr', help='weight_decay', type=int, nargs='?', default=0.003)
+parser.add_argument('-lr', help='weight_decay', type=float, nargs='?', default=0.003)
 parser.add_argument('-wd', help='weight_decay', type=int, nargs='?', default=0)
 args = parser.parse_args()
-
-weights = args.w
 
 SEED = args.s
 torch.manual_seed(SEED)
 model_number = args.i 
-n_img_size = args. 
+n_img_size = args.n 
 num_epochs = args.e
 scale_factor = 1
 batch_size = args.b 

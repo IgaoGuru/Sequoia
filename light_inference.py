@@ -26,7 +26,9 @@ print("")
 
 #path to model to be loaded
 # model_path = "E:\\Documento\\output_nn\\model#7e19.th"
-model_path = "light_classifier_v1.th"
+# model_path = "light_classifier_v1.th"
+model_path = ""
+
 IMG_SIZE = 32
 
 if torch.cuda.is_available():
@@ -38,9 +40,12 @@ else:
 
 # model = Light_Classifier(num_convs_backbone=convs_backbone, num_backbone_out_channels=out_channels_backbone)
 model = Light_Classifier()
-model.load_state_dict(torch.load(model_path))
-model.to(device)
-model.eval()
+
+def load_light_weights(load_path):
+    model_path = load_path
+    model.load_state_dict(torch.load(model_path))
+    model.to(device)
+    model.eval()
 
 def light_run(img, bbox):
     bbox = list(map(int, bbox))

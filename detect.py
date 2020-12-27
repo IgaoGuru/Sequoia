@@ -14,6 +14,7 @@ import torch.backends.cudnn as cudnn
 from numpy import asarray, random, reshape, swapaxes
 
 from light_inference import light_run
+from light_inference import load_light_weights
 from models.experimental import attempt_load
 from utils.general import (apply_classifier, check_img_size,
                            non_max_suppression, plot_one_box, scale_coords,
@@ -52,6 +53,7 @@ print("detecting on: %s"%(torch.cuda.get_device_name(device)))
 
 # Load model
 model = attempt_load(weights, map_location=device)  # load FP32 model
+load_light_weights(args.wl)
 print(f"using model from {weights}")
 
 # Get names and colors
