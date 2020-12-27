@@ -1,6 +1,6 @@
 ![Sample Gif](/readmes/sequoia_samplebanner.gif)
 
-# Csgo Data-Collector 
+# Sequoia - a CS:GO AI detection bot.
 [![C++](https://img.shields.io/badge/language-python-blue)](https://www.python.org/) 
 [![CS:GO](https://img.shields.io/badge/game-CS%3AGO-yellow.svg?style=plastic)](https://store.steampowered.com/app/730/CounterStrike_Global_Offensive/) 
 [![Windows](https://img.shields.io/badge/platform-Windows-0078d7.svg?style=plastic)](https://en.wikipedia.org/wiki/Microsoft_Windows) 
@@ -9,6 +9,7 @@
 <br>![Windows](https://github.com/danielkrupinski/Osiris/workflows/Windows/badge.svg?branch=master&event=push)
 
 A neural network for CounterStrike:GlobalOffensive character detection and classification. Built on a custom-made dataset, powered by the [csgo-data-collector](https://github.com/IgaoGuru/csgo-data) software.
+This project was developed by [me](http://igorl.xyz), mentored by [Paulo Abelha](https://github.com/pauloabelha/). 
 
 The project incorporates a fine-tuned version of [Ultralitic's YOLOv5](https://github.com/ultralytics/yolov5), while also using a secondary helper-NN for aiding in the classification task.  
 After inference, the bounding boxes are processed by the **yolo_inference.py** file, and the mouse movement is calculated based on the distance from the crosshair (aim) to the enemy's location.
@@ -47,12 +48,22 @@ After inference, the bounding boxes are processed by the **yolo_inference.py** f
 
 ## Neural Network Structure
 
+I've drawn this sketch/diagram to illustrate the high-level structure of the AI.
+(sorry for not being good at drawing, my only drawing experience was a snake swallowing an elephant)
+
+First, the screenshot is taken from the `detect.py` file. After being reshaped into the appropriate dimensions (1, 3, 512, 512), it first goes into the fine-tuned YOLO v.5. After YOLO's processing, the 512x512 image is cropped using the coordinates given by the first NN. From there, the cropped image is resized into a 32x32 image enclosing only the player to be classified. The second NN (Light_Classifier) then returns the final classification results, and the coordinates from YOLO are combined with Light's classification to form the final, complete output.
+
 ## Setting up for inference
 
-If you want to test out the model, you can do so using the `yolo_detect.py` file. 
-By default
-There are some parameters you will need to configure before running the program:
+If you want to test out the model, you can do so using the `detect.py` file. 
 
+The default resolution for the game is **1280x720**, but you can change that by adding the "-x" and "-y" flags, then specifying the desired resolution by its x (e.g. 1280) and y (e.g. 720) components.
+**Remember to always keep your game in the top-left corner of your monitor**
+If you notice that the window's window bar is getting captured in the screenshot, you can change the y_offset of the capture by specifying the height of you window bar in pixels with the "-off" flag.
+
+### using the auto-shooting mechanic [WIP]
+
+By default, auto-shooting is disabled because it is still in development, it's very slow and laggy at the moment. On the other hand, it's functional, so you might want to toggle it using the "-shoot 1" argument. This function has not been tested on other resolutions other than 1280x720, and if you know of a library/method that will emulate mouse movement faster than AHK, please reach me so I can implement it on the project.  
 
 ## Training on custom data
 
@@ -145,12 +156,14 @@ The annotation file contains the following format:
 
 ## Acknowledgments
 
-* [Daniel Krupiński](https://github.com/danielkrupinski) for developing and maintaining the open-source original software.
-* [ocornut](https://github.com/ocornut) and [contributors](https://github.com/ocornut/imgui/graphs/contributors) for creating and maintaining an amazing GUI library - [Dear imgui](https://github.com/ocornut/imgui).
-* [Zer0Mem0ry](https://github.com/Zer0Mem0ry) - for great tutorials on reverse engineering and game hacking
+* [Paulo Abelha](https://github.com/pauloabelha/), for lending me his experience and knowledge, and for enabling this project to exist.   
+
+* [All of the team at Ultralytics](https://github.com/ultralytics), for developing such an awesome Neural Network, that was the backbone AI for the project.
+
+* [Daniel Krupiński](https://github.com/danielkrupinski), for developing and maintaining the open-source  software that was used as the basis for my [CS:GO data collection program](https://github.com/IgaoGuru/csgo-data), which was crucial for the development of the project's dataset.
 
 ## License
 
-> Copyright (c) 2020-2020 Igor Rocha
+> Copyright (c) 2020-2021 Igor Rocha
 
-This project is licensed under the [MIT License](https://opensource.org/licenses/mit-license.php) - see the [LICENSE](https://github.com/danielkrupinski/Osiris/blob/master/LICENSE) file for details.
+This project is licensed under the [GPL 3.0 License](https://opensource.org/licenses/GPL-3.0). 

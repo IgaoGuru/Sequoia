@@ -25,8 +25,8 @@ ahk = AHK()
 parser = argparse.ArgumentParser(description='Detect on CS:GO')
 parser.add_argument('-w', help='absolute path to location of custom weights (optional)', type=str, nargs='?', default='sequoiaV1.pt')
 parser.add_argument('-s', help='absolute path to directory where images from detection can be saved (optional)', type=str, nargs='?', default=None)
-parser.add_argument('-x', help='the x component of your game\'s resolution eg.([1280] x 720)', type=int)
-parser.add_argument('-y', help='the x component of your game\'s resolution eg.(1280 x [720])', type=int)
+parser.add_argument('-x', help='the x component of your game\'s resolution eg.([1280] x 720)', type=int, nargs='?', default=1280)
+parser.add_argument('-y', help='the x component of your game\'s resolution eg.(1280 x [720])', type=int, nargs='?', default=720)
 parser.add_argument('-off', help='the height of your game\'s window bar at the top (to be compensated)', type=int, nargs='?', default=26)
 parser.add_argument('-shoot', help='toggles auto-shooting (i.e. automatic mouse movement) [either 0 (off) or 1 (on)]', type=int, nargs='?', default=False)
 parser.add_argument('-bench', help='toggles benchmark mode (displays inference times in ms) [either 0 (off) or 1 (on)]', type=int, nargs='?', default=False)
@@ -70,13 +70,13 @@ def shoot(bbox):
         #   39 = 30 (ao inves de 26)
 
     bbox = list(map(int, bbox))
-    bbox[0] = bbox[0]*1280/512 
-    bbox[2] = bbox[2]*1280/512 
+    bbox[0] = bbox[0]*window_x/512 
+    bbox[2] = bbox[2]*window_x/512 
     
-    bbox[1] = bbox[1]*720/512 
-    bbox[3] = bbox[3]*720/512 
+    bbox[1] = bbox[1]*window_y/512 
+    bbox[3] = bbox[3]*window_y/512 
 
-    x = (((bbox[2]-bbox[0])/2) + bbox[0]) - 640
+    x = (((bbox[2]-bbox[0])/2) + bbox[0]) - int(window_x/2)
     x_m = -0.00005*(x**2)  + 0.1094 * x
 
     #   target: body
