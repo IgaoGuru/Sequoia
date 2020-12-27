@@ -1,5 +1,7 @@
 import pickle
 import cv2
+from os.path import join
+from os import mkdir
 from tqdm import tqdm
 from time import time
 from numpy import array as nparray
@@ -29,16 +31,16 @@ print("")
 
 SEED = 24
 torch.manual_seed(SEED)
-model_number = 777 #currently using '999' as "disposable" model_number :)
+model_number = 999 #currently using '999' as "disposable" model_number :)
 n_img_size = 32
 num_epochs = 100
 scale_factor = 1
 checkpoints = [0, 14, 16, 18, 19, 21, 24, 26, 29, 32, 34, 37, 39, 41, 43, 45, 47, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999, 1199, 1299, 1399, 1499, 1799, 1999] #all epoch indexes where the network should be saved
-batch_size = 64
+batch_size = 16
 convs_backbone = 1
 out_channels_backbone = 4
 reg_weight = 1 # leave 1 for no weighting
-dlength = 60000 # leave None for maximum dataset length
+dlength = 2 # leave None for maximum dataset length
 
 # dataset_path = "C:\\Users\\User\\Documents\\GitHub\\Csgo-NeuralNetworkPaulo\\data\\datasets\\"  #remember to put "/" at the end
 dataset_path = "E:\\Documento\\outputs\\"  #remember to put "\\" at the end
@@ -105,15 +107,15 @@ print(f"Started training! Go have a coffee/mate/glass of water...")
 print(f"Log interval: {log_interval}")
 print(f"Please wait for first logging of the training")
 
-#safety toggle to make sure no files are overwritten by accident while testing!
-if model_number != 999:
-    safety_toggle = input(f'ATTENTION: MODEL NUMBER IS :{model_number}:\
-        ANY FILES WITH THE SAME MODEL NUMBER WILL BE DELETED. Continue? (Y/n):')
-    if safety_toggle != 'Y' and safety_toggle != 'y':
-        raise ValueError('Please change the model number to 999, or choose to continue')
-
 
 def train_cycle():
+    #safety toggle to make sure no files are overwritten by accident while testing!
+    if model_number != 999:
+        safety_toggle = input(f'ATTENTION: MODEL NUMBER IS :{model_number}:\
+            ANY FILES WITH THE SAME MODEL NUMBER WILL BE DELETED. Continue? (Y/n):')
+        if safety_toggle != 'Y' and safety_toggle != 'y':
+            raise ValueError('Please change the model number to 999, or choose to continue')
+
     loss_total_dict = { 
         'epochs' : 0,
         'lr' : lr,
@@ -123,10 +125,14 @@ def train_cycle():
         'losses' : [],
         'accuracies' : [],
         'losses_val' : [],
-        'accuracies_val' : []
+        'accuracies_val' : [],
+        'best_loss' : 999,
+        'best_loss_val' : 999
     }
 
-    model_save_path_new = f"{model_save_path}model#{model_number}"  
+    model_save_path_new = join(model_save_path, str(model_number))
+    mkdir(model_save_path_new)
+
     lr_idx = 0
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
@@ -175,15 +181,19 @@ def train_cycle():
                 loss_total_dict['epochs'] = epoch 
                 loss_total_dict['losses'].append(running_loss/log_interval) 
                 loss_total_dict['accuracies'].append(running_acc/log_interval) 
-                running_loss = 0.0
-                running_acc = 0.0
 
-                if epoch in checkpoints: 
-                    print(f"Saving net at: {model_save_path_new}")
-                    torch.save(model.state_dict(), model_save_path_new + 'e' + f'{epoch}' + '.th')
+                #save model
+                if running_loss/log_interval <= loss_total_dict['best_loss']:
+                    loss_total_dict['best_loss'] = running_loss/log_interval
+                    torch.save(model.state_dict(), join(model_save_path_new, "best_train") + '.th')
+                else:
+                    torch.save(model.state_dict(), join(model_save_path_new, "last") + '.th')
                     
                 with open(f'{model_save_path_new}-train', 'wb') as filezin:
                     pickle.dump(loss_total_dict, filezin)
+
+                running_loss = 0.0
+                running_acc = 0.0
 
             loss.backward()
             optimizer.step()
@@ -219,12 +229,18 @@ def train_cycle():
                 loss_total_dict['epochs'] = epoch
                 loss_total_dict['losses_val'].append(running_loss_val/log_interval_val) 
                 loss_total_dict['accuracies_val'].append(running_acc_val/log_interval_val) 
-                running_loss_val = 0.0
-                running_acc_val = 0.0
+
+                if running_loss/log_interval <= loss_total_dict['best_loss_val']:
+                    loss_total_dict['best_loss_val'] = running_loss_val/log_interval_val
+                    torch.save(model.state_dict(), join(model_save_path_new, "best_val") + '.th')
 
                 if epoch in checkpoints: 
                     with open(f'{model_save_path_new}-train', 'wb') as filezin:
                         pickle.dump(loss_total_dict, filezin)
+
+                running_loss_val = 0.0
+                running_acc_val = 0.0
+
         print("\n")
         # if lr_idx < len(lrs):
         #     lr_idx += 1
