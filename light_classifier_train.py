@@ -28,13 +28,12 @@ print(f"opencv version: {cv2.__version__}")
 print("")
 
 SEED = 24
-
 torch.manual_seed(SEED)
+model_number = 777 #currently using '999' as "disposable" model_number :)
 n_img_size = 32
 num_epochs = 100
 scale_factor = 1
 checkpoints = [0, 14, 16, 18, 19, 21, 24, 26, 29, 32, 34, 37, 39, 41, 43, 45, 47, 49, 79, 99, 199, 299, 399, 499, 599, 699, 799, 899, 999, 1199, 1299, 1399, 1499, 1799, 1999] #all epoch indexes where the network should be saved
-model_number = 777 #currently using '999' as "disposable" model_number :)
 batch_size = 64
 convs_backbone = 1
 out_channels_backbone = 4

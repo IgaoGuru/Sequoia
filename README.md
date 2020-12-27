@@ -67,10 +67,20 @@ By default, auto-shooting is disabled because it is still in development, it's v
 
 ## Training on custom data
 
-Remember to configurate steam to start CS:GO in [insecure mode](https://csgg.in/csgo-guide-to-launch-options/) (with the "-untrusted") flag), and run the game. This flag will ensure that Valve's anticheat isn't activated when you inject the dll (eliminating the risk of banning you steam account from cs:go's servers).
+### Obtaining data
 
-In csgo's video setting, remember to change the in-game resolution to your current [img_rez]() (default=`[1280x720]`).
-**place the csgo window on the top-left corner of you primary monitor**
+You will need a lot of data in order to fine-tune these models. Luckily, I've already taken care of that for you. You can use my [CS:GO Data-Collector](https://github.com/IgaoGuru/csgo-data) program. Everything about the dataset construction can be found in its own documentation.
+
+### Training YOLOv5 and applying weights
+
+If you wish to train YOLOv5 on your own dataset, you can follow [Ultralytics own tutorial](https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data).
+
+After obtaining your custom weights, you can specify the path to them with the "-w [insert path here]" argument when running `detect.py`.
+
+### Training Light_Classifier and applying weights
+
+The Light_Classifier takes advantage of the csgo-data dataset for training. After obtaining a dataset, you can specify its root path with the argument "-rp [path]" when calling the `light_classifier_train.py` file. 
+
 
 For data-collection results, it's best to run "deathmatch" private matches, that is because there are no interruptions (like round intervals or timeouts) during the game, and you can switch freely between teams.
 
