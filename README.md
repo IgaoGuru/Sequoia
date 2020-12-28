@@ -49,9 +49,11 @@ After inference, the bounding boxes are processed by the **yolo_inference.py** f
 ## Neural Network Structure
 
 I've drawn this sketch/diagram to illustrate the high-level structure of the AI.
-![](readmes/sketch.png)
-![](readmes/light_classifier_diagram.png)
+![](readmes/sketch.jpg)
 First, the screenshot is taken from the `detect.py` file. After being reshaped into the appropriate dimensions (1, 3, 512, 512), it first goes into the fine-tuned YOLO v.5. After YOLO's processing, the 512x512 image is cropped using the coordinates given by the first NN. From there, the cropped image is resized into a 32x32 image enclosing only the player to be classified. The second NN (Light_Classifier) then returns the final classification results, and the coordinates from YOLO are combined with Light's classification to form the final, complete output.
+
+![](readmes/sequoia-sketch2.jpg)
+This slightly more professional-looking diagram illustrates the architecture of the Light_Classifier. The input is a 32x32 image that encloses the player to be classified. It then passes through three convolutional blocks, each containing a 2d convolutional layer, followed by 2d Batch Normalization and a reLU function. In these three blocks, the network "decomposes" the original image into many smaller matrices that represent learned features of the original frame. These could be edges, colors, shapes and dimensions that the NN finds to be important for the task. The outputs of the last convolutional block are then flattened into a one dimensional array, and fed through a sequence of three linear layers, which will "condense" the information grasped by the convolutions into a single digit at the end, representing the acessed probability that the image analyzed is a CounterTerrorist (in this case, if the probability is < 50%, the NN believes the character to be a Terrorist). 
 
 ## Setting up for inference
 
@@ -81,88 +83,7 @@ After obtaining your custom weights, you can specify the path to them with the "
 
 The Light_Classifier takes advantage of the csgo-data dataset for training. After obtaining a dataset, you can specify its root path with the argument "-rp [path]" when calling the `light_classifier_train.py` file. 
 
-
-For data-collection results, it's best to run "deathmatch" private matches, that is because there are no interruptions (like round intervals or timeouts) during the game, and you can switch freely between teams.
-
-<details>
-<summary> Recommended CS:GO deathmatch settings:</summary>
-<br>
-
-After starting the private match, make sure your [Developer Console](https://gamepros.gg/csgo/articles/how-to-open-the-console-csgo-enable-and-use-developer-console) is activated in CS:GO's settings. After that, I recommend setting the following commands:
-```
-sv_cheats 1
-bind t noclip
-bind y god
-mp_dm_bonus_length_max 0
-mp_dm_time_between_bonus_max 9999
-cl_teamid_overhead_mode 0
-mp_roundtime 60
-mp_restartgame 1 60
-god
-```
-with these commands, you can use <kbd>t</kbd> to fly through te map, making it easier to spot other players, and use <kbd>y</kbd> to make the LocalPlayer(you) immortal. 
-</details>
-.
-
-> note: because of a minor difference between the capturing of the screen and the bounding box output, moving the mouse too fast may cause inaccuracies in the data collection. Try to move the mouse at a steady rate, with no fast or abrupt movements.
-
-### Running the Dll
-
-Inside Extreme Injector's configuration menu, change the Injection Method from "Standard Injection" to "Manual Map".
-
-Before injecting, create a folder named named `"csgolog"` inside `"C:\"`, so that it's path is `C:\csgolog\`.
-
-Select the game's process in the injector, and select the dll in `"ADD DLL"` option. You can now inject the dll by clicking `Inject`. 
-
-After starting a private match with bots, open the menu with <kbd>INSERT</kbd>, and click on the `ESP` option.
-
-In the ESP menu, you can enable either enemy and ally bounding boxes (or both at the same time) with the "Box" checkbox.
-> By default, the bounding boxes are not rendered into the game (so you won't be able to see them while playing). Later on, an option for toggling bbox rendering will be added.
-
-<img src="readmeimages/csgodatareadme2.png" alt="drawing" width="800"/>
-
-Enabling the "Box" option will automatically start outputing bboxes for the specific target. (in this case "Visible Enemies");
-
-After enabling the preffered bounding boxes, a text file will be created in the **stardard path** `(C:/csgolog/csgo_log.txt)`. You don't need to edit or open the file. This file will be read and processed by the `main_cycle.py` script.
-
-> note: in order to modify the standard csv path (not recommended), you will need to edit/compile the dll's code from source
-<details>
-<summary> If you want to modify the standard csv path:</summary>
-<br>
-
-After opening the dll's code in VisualStudio, head over to the `StreamProofEsp.cpp` file under the `Hacks` folder. In there, you should find a `PlayerAnnotate` function, and there you can modify the "myfile.open('your_path_here')" path.
-<img src="readmeimages/csgodatareadme3.png" alt="drawing" width="800"/>
-</details>
-
-
-### Collecting images and outputs
-
-Now that the preferred bboxes are being outputed, its time to collect the actual images that correspond to the outputed bboxes. For collecting the images and pairing them with the dll's output, we will use the **main_cycle.py** script.
-
-Open the **main_cycle.py** script with you editor of choice, and change the "output_path" variable to your directory of choice. This path will contain the outputs from the data-collector.
-
-With the dll running, run the **main_cycle.py** script. A folder will be created every time the script is ran. Inside, there will be the annotation from the screencaptures inside the "imgs" folder. This annotation file is the final output of the data-collector. 
-
-## Important variables and files
-
-#### main_cycle.py 
-This file manages the screencapturing, saving, merging and outputing of the data-collector. 
-All functions used by this file come from the **csgodata** module (inside the **utils** folder).
-
-Every run of this file generates a new [session folder](####sessionfolder)
-
-#### Session folder
-A session is a complete run of the main_cycle.py script. This folder contains the outputs from main_cycle.py.
-The folder contains:
-* imgs folder (contains the screenshots)
-* [annotation file](#annotationfile) (contains the formatted bbox annotations)
-
-#### Annotation file
-The annotation file contains the following format:
-* corresponding image's name
-* LocalPlayer's team (2 = Terrorist, 3 = CounterTerrorist)
-* bboxes's enemy state (if bbox is from the opposite team from LocalPlayer = 1; else = 0)
-* x0, y0, x1, y1
+You can run `light_classifier_train.py -h` to get a list of all the variables you may want to configure, and its respective flags - such as batch_size, dataset length, number of epochs, learning rate and others.
 
 ## Acknowledgments
 
