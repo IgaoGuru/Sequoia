@@ -46,11 +46,9 @@ class Light_Classifier(torch.nn.Module):
       x = self.conv1(x)
       x = self.maxpool(x)
 
-      print(x.shape)
       x = self.conv2(x)
       x = self.maxpool(x)
 
-      print(x.shape)
       x = self.conv3(x)
       x = self.maxpool(x)
       x = x.reshape((-1, self.bigN))
@@ -163,6 +161,10 @@ class Light_Dataset(CsgoDataset):
          img = self.transform(img)
 
       return img, label
+
+   def get_original(self, idx):
+      img, bboxes, labels = super().__getitem__(idx)
+      return img, bboxes, labels
 
 #some utils      
 def binary_acc(y_pred, y_test):

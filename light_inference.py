@@ -52,9 +52,9 @@ def light_run(img, bbox):
     img = cv2.resize(img, dsize=(512, 512))
     img = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
     img = cv2.resize(img, dsize=(IMG_SIZE, IMG_SIZE))
-    cv2.imshow("guru", img)
-    if cv2.waitKey(1) == ord('q'):  # q to quit
-        raise StopIteration
+    # cv2.imshow("guru", img)
+    # if cv2.waitKey(1) == ord('q'):  # q to quit
+    #     raise StopIteration
     img = img[npnewaxis, ...]
     img = nptranspose(img, (0, 3, 1, 2))
     img = torch.from_numpy(img).float().to(device)
