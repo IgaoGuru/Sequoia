@@ -70,6 +70,8 @@ YOLO was trained on **Google Cloud's compute engine** with a **12gb Tesla K80**.
 
 Light was trained on my local computer, with a **3gb gtx 1060**. The dataset contained approximately **60k images** (same as YOLO's), and training took **25 epochs**. The network was randomly initialized with seed **42**.
 
+> If you leave the `-w` and `-wl` flags on `detect.py` empty, the standard weights will be loaded
+
 ### using the auto-shooting mechanic [WIP]
 
 By default, auto-shooting is disabled because it is still in development, it's very slow and laggy at the moment. On the other hand, it's functional, so you might want to toggle it using the "-shoot 1" argument. This function has not been tested on other resolutions other than 1280x720, and if you know of a library/method that will emulate mouse movement faster than AHK, please reach me so I can implement it on the project.  
