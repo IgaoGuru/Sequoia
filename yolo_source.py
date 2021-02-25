@@ -1,102 +1,45 @@
+import argparse
+import os
+import shutil
+from time import time
+from pathlib import Path
+
 import cv2
 import torch
-import shutil
-import argparse
-import numpy as np
-from ahk import AHK
-from os import path
-from mss import mss
-from cv2 import cv2
-from PIL import Image
-from pathlib import Path
-from time import sleep, time
 import torch.backends.cudnn as cudnn
-from numpy import asarray, random, reshape, swapaxes
-from strektref import set_pos
 
-from light_inference import light_run
-from light_inference import load_light_weights
+from os import path
+from numpy import random
+from numpy import swapaxes
+from numpy import reshape
+from numpy import asarray
+
 from models.experimental import attempt_load
-from utils.general import (apply_classifier, check_img_size,
-                           non_max_suppression, plot_one_box, scale_coords,
-                           set_logging, strip_optimizer, xyxy2xywh)
+# from utils.datasets import LoadStreams, LoadImages
+from utils.general import (
+    check_img_size, non_max_suppression, apply_classifier, scale_coords,
+    xyxy2xywh, plot_one_box, strip_optimizer, set_logging)
 
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+    print("Yolo v5 running on: %s"%(torch.cuda.get_device_name(device)))
+else:
+    device = torch.device("cpu")
+    print('Yolo v5 running on: CPU')
 
-ahk = AHK()
-
-parser = argparse.ArgumentParser(description='Detect on CS:GO')
-parser.add_argument('-w', help='absolute path to custom weights for YOLO(optional)', type=str, nargs='?', default='sequoiaV1.pt')
-parser.add_argument('-wl', help='absolute path to custom weights for Light_Classifier', type=str, nargs='?', default='light_classifier_v1.th')
-parser.add_argument('-s', help='absolute path to directory where images from detection can be saved (optional)', type=str, nargs='?', default=None)
-parser.add_argument('-x', help='the x component of your game\'s resolution eg.([1280] x 720)', type=int, nargs='?', default=1280)
-parser.add_argument('-y', help='the x component of your game\'s resolution eg.(1280 x [720])', type=int, nargs='?', default=720)
-parser.add_argument('-off', help='the height of your game\'s window bar at the top (to be compensated)', type=int, nargs='?', default=26)
-parser.add_argument('-shoot', help='toggles auto-shooting (i.e. automatic mouse movement) [either 0 (off) or 1 (on)]', type=int, nargs='?', default=False)
-parser.add_argument('-bench', help='toggles benchmark mode (displays inference times in ms) [either 0 (off) or 1 (on)]', type=int, nargs='?', default=False)
-args = parser.parse_args()
-
-weights = args.w
-save_path = args.s
-window_x = args.x
-window_y = args.y
-y_offset = args.off
-_shoot = args.shoot
-benchmark = args.bench
-print(_shoot, benchmark)
-
-window_shape = [window_x, window_y, y_offset]
-
-# weights = "e:\\ai\\cloud_outputs\\exp14\\weights\\best.pt"
-
-# Initialize
-device = torch.device("cuda:0")
-print("detecting on: %s"%(torch.cuda.get_device_name(device)))
+#init variables 
+model = "to be loaded"
+names, colors = None, None
 
 # Load model
-model = attempt_load(weights, map_location=device)  # load FP32 model
-load_light_weights(args.wl)
-print(f"using model from {weights}")
+def load_yolo_weights(load_path):
+    model = attempt_load(load_path, map_location=device)  # load FP32 model
+    model.to(device)
+    # Get names and colors
+    names = model.module.names if hasattr(model, 'module') else model.names
+    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
 
-# Get names and colors
-names = model.module.names if hasattr(model, 'module') else model.names
-colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
-
-def shoot(bbox):
-    """Manages bbox to mouse emulator input conversion and clicking.
-
-    Args:
-        bbox (list): list of four integers representing the pixel coordinates of the enemy [x0,y0,x1,y1].
-    """
-
-    ## note to myself: auto-shooting still very experimental
-    #AKH :: 78 = 90degrees
-        #   39 = 30 (ao inves de 26)
-
-    bbox = list(map(int, bbox))
-    bbox[0] = bbox[0]*window_x/512 
-    bbox[2] = bbox[2]*window_x/512 
-    
-    bbox[1] = bbox[1]*window_y/512 
-    bbox[3] = bbox[3]*window_y/512 
-
-    print(bbox)
-    # x = (((bbox[2]-bbox[0])/2) + bbox[0]) - int(window_x/2)
-    # x_m = -0.00005*(x**2)  + 0.1094 * x
-    x = ((bbox[2] - bbox[0])/2) + bbox[0]
-    y = bbox[1] + 20
-    #   target: body
-    # y = (((bbox[3]-bbox[1])/2) + bbox[1]) - 360
-    #   target: head
-    # y = (bbox[1] + 20) - 360
-    # y_m = -0.00005*(y**2)  + 0.0463 * y
-
-    # if x<= 20 and  y <= 20: 
-        # ahk.click()
-
-    print(x, y)
-    set_pos(x, y)
-
-def detect(img, save_path, img_name, conf_threshold=0.4, view_img=False, \
+def detect(model, img, save_path, img_name, conf_threshold=0.4, view_img=False, \
     save_img=False, use_light=True, compare_light=False, only_enemies=False, enemy_str=None, benchmark=False):
     """Manage all aspects of inference for both networks (yolo and light).
 
@@ -130,6 +73,7 @@ def detect(img, save_path, img_name, conf_threshold=0.4, view_img=False, \
 
     # -- Inference --
     tic_yolo = time()
+    print(model)
     pred = model(img)[0]
 
     # Apply NMS
@@ -198,7 +142,6 @@ def detect(img, save_path, img_name, conf_threshold=0.4, view_img=False, \
 
         # Stream results
         if view_img:
-            im0 = cv2.resize(im0, (1280,720))
             cv2.imshow(p, im0)
             if cv2.waitKey(1) == ord('q'):  # q to quit
                 raise StopIteration
@@ -207,29 +150,3 @@ def detect(img, save_path, img_name, conf_threshold=0.4, view_img=False, \
             cv2.imwrite(path.join(save_path, img_name) + ".png", im0)
 
         return bboxes
-
-while True:
-    img_name = str(int(time()*1000))
-    with mss() as sct:
-        # 1280 windowed mode for CS:GO, at the top left position of your main screen.
-        # 26 px accounts for title bar. 
-        monitor = {"top": y_offset, "left": 0, "width": window_x, "height": window_y}
-        img = sct.grab(monitor)
-        #create PIL image
-        img = Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
-        img = img.resize((512, 512))
-        imgarr = np.asarray(img)
-        imgarr = cv2.cvtColor(imgarr, cv2.COLOR_BGR2RGB)
-
-        tic = time()
-        bboxes = detect(imgarr, save_path, img_name, view_img=True, use_light=False, benchmark=benchmark) 
-        toc = time() - tic
-        if benchmark:
-            print(f'total time: {toc*1000:1f} ms')
-
-        if len(bboxes) > 0 and _shoot:
-            shoot(bboxes[0])
-
-        # sleep(0.01)
-
-            

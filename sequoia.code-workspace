@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "..\\yolov5"
+		},
+		{
+			"path": "..\\video-sequoia"
 		}
 	],
 	"settings": {}
