@@ -17,7 +17,7 @@ After inference, the bounding boxes are processed by the **yolo_inference.py** f
 **DISCLAIMER: This software was developed with the intention of only being used in private matches, as a proof of concept, causing no harm to other player's experiences. If you wish to cheat in online matches, be aware that there are many other much more practical and efficient ways of doing so.**
 
 ## Prerequisites
-* [Python 8.x](https://python.org) with additional libraries
+* [Python 3.8.x](https://python.org) with additional libraries
 
     <details>
     <summary> list of required libraries:</summary>
