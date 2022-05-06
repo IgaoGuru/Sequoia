@@ -21,9 +21,6 @@ from utils.general import (apply_classifier, check_img_size,
                            non_max_suppression, plot_one_box, scale_coords,
                            set_logging, strip_optimizer, xyxy2xywh)
 
-
-ahk = AHK()
-
 parser = argparse.ArgumentParser(description='Detect on CS:GO')
 parser.add_argument('-w', help='absolute path to custom weights for YOLO(optional)', type=str, nargs='?', default='sequoiaV1.pt')
 parser.add_argument('-wl', help='absolute path to custom weights for Light_Classifier', type=str, nargs='?', default='light_classifier_v1.th')
@@ -45,6 +42,9 @@ benchmark = args.bench
 print(_shoot, benchmark)
 
 window_shape = [window_x, window_y, y_offset]
+
+if _shoot:
+    ahk = AHK()
 
 # weights = "e:\\ai\\cloud_outputs\\exp14\\weights\\best.pt"
 
