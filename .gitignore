@@ -1,5 +1,1 @@
-teste.py
-csgodata.py
-runs_igor
-oldcode
-sequoia.code-workspace
+*.pyc 
